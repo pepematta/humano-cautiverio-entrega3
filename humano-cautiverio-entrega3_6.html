@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>El Humano en Cautiverio — Fisicalización</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FAFAF7;
+    --bg-primitivo: #EBF1EA;
+    --text: #1a1a1a;
+    --text-secondary: #5a5a5a;
+    --text-tertiary: #8a8a8a;
+    --border: #e0ddd6;
+    --border-light: #eceae4;
+
+    --col-movement: #C0694A;
+    --col-screen: #8B6E99;
+    --col-work: #2D4A7A;
+    --col-natural: #4A8C6F;
+
+    --serif: 'Source Serif 4', Georgia, serif;
+    --sans: 'DM Sans', -apple-system, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    transition: background 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+    min-height: 100vh;
+  }
+
+  body.primitivo { background: var(--bg-primitivo); }
+
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  /* ─── HEADER ─── */
+  header { text-align: center; margin-bottom: 8px; }
+
+  .kicker {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin-bottom: 18px;
+  }
+
+  .mode-title {
+    font-family: var(--serif);
+    font-size: clamp(26px, 4vw, 38px);
+    font-weight: 700;
+    line-height: 1.1;
+    transition: color 0.9s ease;
+  }
+
+  body.primitivo .mode-title { color: var(--col-natural); }
+
+  .mode-sub {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: 17px;
+    color: var(--text-secondary);
+    margin-top: 10px;
+    min-height: 26px;
+  }
+
+  /* ─── GAUGES ─── */
+  .gauges {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    margin-top: 52px;
+  }
+
+  .gauge-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .gauge-wrap { position: relative; width: 220px; height: 220px; }
+
+  .gauge-svg { width: 100%; height: 100%; }
+
+  .gauge-readout {
+    position: absolute;
+    bottom: 38px;
+    left: 0; right: 0;
+    text-align: center;
+  }
+
+  .gauge-value {
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .gauge-unit {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-top: 4px;
+  }
+
+  .gauge-name {
+    font-family: var(--serif);
+    font-size: 19px;
+    font-weight: 600;
+    margin-top: 14px;
+  }
+
+  .gauge-context {
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--text-secondary);
+    margin-top: 8px;
+    max-width: 260px;
+  }
+
+  .gauge-context .prim {
+    display: block;
+    margin-top: 6px;
+    font-style: italic;
+    color: var(--text-tertiary);
+  }
+
+  /* ─── CONTROLS ─── */
+  .controls {
+    margin-top: 56px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: flex-end;
+    justify-content: center;
+  }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+
+  .field label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+  }
+
+  .field input {
+    width: 130px;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-size: 15px;
+    background: #fff;
+    color: var(--text);
+  }
+
+  .field input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 180px;
+    height: 4px;
+    padding: 0;
+    border: none;
+    background: var(--border);
+    border-radius: 2px;
+    cursor: pointer;
+  }
+  .field input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--col-movement);
+    border: 2px solid var(--bg);
+    cursor: pointer;
+  }
+  .field input[type="range"]::-moz-range-thumb {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--col-movement);
+    border: 2px solid var(--bg);
+    cursor: pointer;
+  }
+
+  .slider-val {
+    font-family: var(--mono);
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .field input:focus { outline: none; border-color: var(--col-movement); }
+
+  button {
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 500;
+    padding: 10px 20px;
+    border: 1px solid var(--text);
+    background: var(--text);
+    color: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  button:hover { opacity: 0.82; }
+  button.ghost { background: transparent; color: var(--text); }
+
+  .serial-row {
+    margin-top: 22px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: var(--text-tertiary);
+  }
+
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #c0392b; flex-shrink: 0;
+  }
+  .dot.on { background: var(--col-natural); }
+
+  .country-section {
+    margin-top: 44px;
+    padding-top: 28px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+  }
+
+  .country-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin-bottom: 16px;
+  }
+
+  .country-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .chip {
+    font-family: var(--sans);
+    font-size: 13px;
+    padding: 7px 14px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: #fff;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .chip:hover { border-color: var(--col-work); color: var(--text); }
+  .chip.active {
+    background: var(--col-work);
+    border-color: var(--col-work);
+    color: #fff;
+  }
+
+  @media (max-width: 760px) {
+    .gauges { grid-template-columns: 1fr; gap: 44px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="kicker">El humano en cautiverio · Entrega 3</div>
+    <h1 class="mode-title" id="modeTitle">Modo: Mis datos</h1>
+    <p class="mode-sub" id="modeSub">Tu uso del tiempo de hoy, medido por tu teléfono y tu calendario.</p>
+  </header>
+
+  <section class="gauges" id="gauges"></section>
+
+  <section class="controls" id="controls"></section>
+
+  <section class="country-section">
+    <div class="country-label">Comparar con el promedio de un país (OCDE)</div>
+    <div class="country-chips" id="countryChips"></div>
+  </section>
+
+  <div class="serial-row">
+    <span class="dot" id="serialDot"></span>
+    <span id="serialStatus">Arduino sin conectar</span>
+    <button class="ghost" id="connectBtn" style="padding:6px 14px; font-size:13px;">Conectar Arduino</button>
+  </div>
+
+</div>
+
+<script>
+// ─── MODELO DE DATOS ───
+// Categorías OCDE Time Use (min/día, población 15-64), comparables por país.
+const PARAMS = [
+  {
+    key: 'work', name: 'Trabajo', unit: 'min', color: '#2D4A7A',
+    max: 600, real: 485, prim: 240,
+    context: 'Trabajo remunerado y estudio.',
+    primText: 'La subsistencia tomaba apenas 3–5 horas.'
+  },
+  {
+    key: 'leisure', name: 'Ocio', unit: 'min', color: '#4A8C6F',
+    max: 480, real: 240, prim: 450,
+    context: 'Tiempo libre: descanso, juego, vida social.',
+    primText: 'Tenía abundante tiempo de ocio, en comunidad.'
+  },
+  {
+    key: 'care', name: 'Cuidado personal', unit: 'min', color: '#7A8B99',
+    max: 800, real: 660, prim: 690,
+    context: 'Dormir, comer, higiene (incluye sueño).',
+    primText: 'Dormía con la luz natural; comía sin prisa.'
+  }
+];
+
+// ─── DATOS OCDE POR PAÍS (min/día, 15-64) ───
+// Fuente: OECD Time Use Database (vía OECD/OWID). Cuidado personal incluye sueño.
+const COUNTRIES = {
+  'Chile':         { flag: '🇨🇱', work: 380, leisure: 280, care: 700 },
+  'México':        { flag: '🇲🇽', work: 480, leisure: 230, care: 660 },
+  'Estados Unidos':{ flag: '🇺🇸', work: 320, leisure: 290, care: 660 },
+  'Francia':       { flag: '🇫🇷', work: 250, leisure: 280, care: 700 },
+  'Alemania':      { flag: '🇩🇪', work: 270, leisure: 300, care: 690 },
+  'España':        { flag: '🇪🇸', work: 280, leisure: 280, care: 690 },
+  'Italia':        { flag: '🇮🇹', work: 260, leisure: 270, care: 700 },
+  'Japón':         { flag: '🇯🇵', work: 350, leisure: 250, care: 660 },
+  'Corea':         { flag: '🇰🇷', work: 380, leisure: 250, care: 650 },
+  'Noruega':       { flag: '🇳🇴', work: 270, leisure: 310, care: 680 },
+  'Reino Unido':   { flag: '🇬🇧', work: 300, leisure: 290, care: 670 },
+  'Canadá':        { flag: '🇨🇦', work: 320, leisure: 280, care: 660 }
+};
+
+let modo = 'real'; // 'real' | 'prim'
+let paisActivo = null;
+
+// ─── CONSTRUCCIÓN DE LOS GAUGES ───
+// Termómetro circular: arco de 270° (de -225° a +45°), aguja que apunta al valor.
+const ARC_START = 135;   // grados (abajo-izquierda)
+const ARC_SWEEP = 270;   // recorrido total
+const R = 92, CX = 110, CY = 110;
+
+function polar(cx, cy, r, deg) {
+  const rad = (deg - 90) * Math.PI / 180;
+  return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
+}
+
+function arcPath(cx, cy, r, startDeg, endDeg) {
+  const [x1, y1] = polar(cx, cy, r, startDeg);
+  const [x2, y2] = polar(cx, cy, r, endDeg);
+  const large = (endDeg - startDeg) % 360 > 180 ? 1 : 0;
+  return `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}`;
+}
+
+function buildGauges() {
+  const host = document.getElementById('gauges');
+  host.innerHTML = '';
+  PARAMS.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'gauge-card';
+    card.innerHTML = `
+      <div class="gauge-wrap">
+        <svg class="gauge-svg" viewBox="0 0 220 220">
+          <path d="${arcPath(CX, CY, R, ARC_START, ARC_START + ARC_SWEEP)}"
+                fill="none" stroke="${'#e3e0d8'}" stroke-width="10" stroke-linecap="round"/>
+          <path id="fill-${p.key}" d="" fill="none" stroke="${p.color}"
+                stroke-width="10" stroke-linecap="round"/>
+          <g id="needle-${p.key}">
+            <line x1="${CX}" y1="${CY}" x2="${CX}" y2="${CY - R + 16}"
+                  stroke="${p.color}" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="${CX}" cy="${CY}" r="7" fill="${p.color}"/>
+            <circle cx="${CX}" cy="${CY}" r="3" fill="#fff"/>
+          </g>
+        </svg>
+        <div class="gauge-readout">
+          <div class="gauge-value" id="val-${p.key}">0</div>
+          <div class="gauge-unit">${p.unit}</div>
+        </div>
+      </div>
+      <div class="gauge-name">${p.name}</div>
+      <div class="gauge-context">
+        ${p.context}
+        <span class="prim">${p.primText}</span>
+      </div>
+    `;
+    host.appendChild(card);
+  });
+}
+
+// ─── ACTUALIZAR UN GAUGE (con animación de aguja) ───
+const animState = {}; // key -> current displayed fraction
+
+// Valor objetivo de un parámetro según el estado actual:
+// - modo primitivo (pulsador) -> valor primitivo
+// - país activo                -> valor del país
+// - si no                      -> mis datos
+function valorObjetivo(p) {
+  if (modo === 'prim') return p.prim;
+  if (paisActivo && COUNTRIES[paisActivo]) return COUNTRIES[paisActivo][p.key];
+  return p.real;
+}
+
+function targetFraction(p) {
+  return Math.max(0, Math.min(1, valorObjetivo(p) / p.max));
+}
+function currentValue(p) {
+  return valorObjetivo(p);
+}
+
+// Animación suave de todas las agujas hacia su objetivo
+function animateGauges() {
+  let moving = false;
+  PARAMS.forEach(p => {
+    const target = targetFraction(p);
+    const targetVal = modo === 'real' ? p.real : p.prim;
+    if (animState[p.key] === undefined) animState[p.key] = 0;
+    const diff = target - animState[p.key];
+    if (Math.abs(diff) > 0.002) {
+      animState[p.key] += diff * 0.12;
+      moving = true;
+    } else {
+      animState[p.key] = target;
+    }
+    // valor mostrado = fracción animada × máximo (interpola limpio, sin NaN)
+    const shownVal = Math.round(animState[p.key] * p.max);
+    document.getElementById(`val-${p.key}`).textContent = shownVal.toLocaleString('es-CL');
+
+    const endDeg = ARC_START + ARC_SWEEP * animState[p.key];
+    const fill = document.getElementById(`fill-${p.key}`);
+    if (animState[p.key] <= 0.001) fill.setAttribute('d', '');
+    else fill.setAttribute('d', arcPath(CX, CY, R, ARC_START, endDeg));
+    const needle = document.getElementById(`needle-${p.key}`);
+    needle.setAttribute('transform', `rotate(${ARC_SWEEP * animState[p.key] - 135} ${CX} ${CY})`);
+  });
+  updateSonification();
+  if (moving) requestAnimationFrame(animateGauges);
+}
+
+// ─── SONIFICACIÓN: índice de naturalidad → desafinación continua ───
+let audioCtx = null, oscBase = null, oscDetune = null, gainNode = null;
+let sonidoActivo = false;
+const BASE_FREQ = 220; // La3
+
+function naturalnessIndex() {
+  // Desviación del estado MOSTRADO (mis datos o país) respecto al primitivo.
+  // promedio simple de (1 - desviación normalizada)
+  let devSum = 0;
+  PARAMS.forEach(p => {
+    const mostrado = paisActivo && COUNTRIES[paisActivo] ? COUNTRIES[paisActivo][p.key] : p.real;
+    const dev = Math.abs(mostrado - p.prim) / p.max;
+    devSum += Math.min(1, dev);
+  });
+  const meanDev = devSum / PARAMS.length;
+  return 1 - meanDev; // 1 = idéntico al primitivo, 0 = muy lejos
+}
+
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  oscBase = audioCtx.createOscillator();
+  oscDetune = audioCtx.createOscillator();
+  gainNode = audioCtx.createGain();
+  oscBase.type = 'sine';
+  oscDetune.type = 'sine';
+  oscBase.frequency.value = BASE_FREQ;
+  oscDetune.frequency.value = BASE_FREQ;
+  gainNode.gain.value = 0.0;
+  oscBase.connect(gainNode);
+  oscDetune.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+  oscBase.start();
+  oscDetune.start();
+}
+
+function updateSonification() {
+  if (!audioCtx) return;
+  // El IDEAL (primitivo) suena como una QUINTA JUSTA (consonancia plena, 3:2).
+  // Cuanto más te alejas del primitivo, el intervalo se desliza hacia el
+  // tritono (disonancia máxima). Día = primitivo -> quinta justa estable.
+  const FIFTH = 702;     // cents de la quinta justa (consonante, con cuerpo)
+  const TRITONE = 600;   // cents del tritono (disonancia máxima)
+
+  let intervalCents;
+  if (modo === 'prim') {
+    intervalCents = FIFTH;                 // ideal = consonancia plena
+  } else {
+    const nat = naturalnessIndex();        // 1 = igual al primitivo
+    const dissonance = 1 - nat;            // 0 = igual al primitivo
+    // interpola desde la quinta (consonante) hacia el tritono (disonante)
+    intervalCents = FIFTH + (TRITONE - FIFTH) * dissonance;
+  }
+  const ratio = Math.pow(2, intervalCents / 1200);
+  if (oscDetune) oscDetune.frequency.setTargetAtTime(BASE_FREQ * ratio, audioCtx.currentTime, 0.05);
+}
+
+function soundOn() {
+  initAudio();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  gainNode.gain.setTargetAtTime(0.12, audioCtx.currentTime, 0.1);
+  updateSonification();
+}
+function soundOff() {
+  if (gainNode) gainNode.gain.setTargetAtTime(0.0, audioCtx.currentTime, 0.2);
+}
+// Actualiza el sonido SOLO si está activo (no lo enciende a la fuerza).
+function actualizarSonido() {
+  if (sonidoActivo) soundOn();
+}
+
+// ─── CAMBIO DE MODO ───
+function refrescarTitulo() {
+  const title = document.getElementById('modeTitle');
+  const sub = document.getElementById('modeSub');
+  if (modo === 'prim') {
+    title.textContent = 'Modo: Humano primitivo';
+    sub.textContent = 'Cómo distribuía el tiempo un cazador-recolector.';
+  } else if (paisActivo) {
+    title.textContent = 'Promedio: ' + COUNTRIES[paisActivo].flag + ' ' + paisActivo;
+    sub.textContent = 'Distribución media del tiempo (OCDE Time Use, 15–64 años).';
+  } else {
+    title.textContent = 'Modo: Mis datos';
+    sub.textContent = 'Tu uso del tiempo de hoy, ingresado manualmente.';
+  }
+}
+
+function setModo(nuevo) {
+  if (modo === nuevo) return;
+  modo = nuevo;
+  document.body.classList.toggle('primitivo', modo === 'prim');
+  refrescarTitulo();
+  animateGauges();
+}
+
+// ─── SELECTOR DE PAÍSES ───
+function buildCountryChips() {
+  const host = document.getElementById('countryChips');
+  host.innerHTML = '';
+  Object.keys(COUNTRIES).forEach(nombre => {
+    const chip = document.createElement('button');
+    chip.className = 'chip';
+    chip.textContent = COUNTRIES[nombre].flag + ' ' + nombre;
+    chip.onclick = () => {
+      if (paisActivo === nombre) {
+        paisActivo = null;           // segundo clic: vuelve a mis datos
+        chip.classList.remove('active');
+      } else {
+        paisActivo = nombre;
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+      }
+      actualizarSonido();
+      refrescarTitulo();
+      animateGauges();
+      sendToArduino();
+    };
+    host.appendChild(chip);
+  });
+}
+
+// ─── CONTROLES (datos manuales con sliders) ───
+function buildControls() {
+  const host = document.getElementById('controls');
+  host.innerHTML = '';
+  PARAMS.forEach(p => {
+    const f = document.createElement('div');
+    f.className = 'field';
+    f.innerHTML = `
+      <label>${p.name} <span class="slider-val" id="sv-${p.key}">${p.real.toLocaleString('es-CL')}</span> ${p.unit}</label>
+      <input type="range" id="in-${p.key}" value="${p.real}" min="0" max="${p.max}" step="1">
+    `;
+    host.appendChild(f);
+    const slider = f.querySelector(`#in-${p.key}`);
+    const out = f.querySelector(`#sv-${p.key}`);
+    slider.addEventListener('input', () => {
+      p.real = parseInt(slider.value) || 0;
+      out.textContent = p.real.toLocaleString('es-CL');
+      // Mover un slider vuelve a "mis datos": desactiva país si estaba activo
+      if (paisActivo) {
+        paisActivo = null;
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        refrescarTitulo();
+      }
+      actualizarSonido();
+      if (modo !== 'prim') animateGauges();
+      sendToArduino();
+    });
+  });
+
+  const sound = document.createElement('button');
+  sound.className = 'ghost';
+  sound.textContent = 'Activar sonido';
+  sound.onclick = () => {
+    if (sonidoActivo) {
+      soundOff();
+      sonidoActivo = false;
+      sound.textContent = 'Activar sonido';
+    } else {
+      soundOn();
+      sonidoActivo = true;
+      sound.textContent = 'Silenciar';
+      animateGauges();
+    }
+  };
+  host.appendChild(sound);
+}
+
+// ─── WEB SERIAL: leer pulsador, enviar datos ───
+let port = null, writer = null;
+
+async function connectSerial() {
+  if (!('serial' in navigator)) {
+    document.getElementById('serialStatus').textContent =
+      'Este navegador no soporta Web Serial. Usa Chrome o Edge de escritorio.';
+    return;
+  }
+  try {
+    port = await navigator.serial.requestPort();
+    await port.open({ baudRate: 9600 });
+    writer = port.writable.getWriter();
+    document.getElementById('serialDot').classList.add('on');
+    document.getElementById('serialStatus').textContent = 'Arduino conectado';
+    sendToArduino();
+    readLoop();
+  } catch (e) {
+    let msg;
+    if (e.name === 'NotFoundError') {
+      msg = 'No elegiste un puerto.';
+    } else if (e.name === 'InvalidStateError' || /already open/i.test(e.message)) {
+      msg = 'El puerto ya está abierto en otro lugar.';
+    } else if (e.name === 'NetworkError' || /failed to open|access denied/i.test(e.message)) {
+      msg = 'Puerto ocupado: cierra el Monitor Serial del IDE de Arduino.';
+    } else {
+      msg = 'Error: ' + (e.message || e.name);
+    }
+    document.getElementById('serialStatus').textContent = msg;
+    console.error('Serial error:', e);
+  }
+}
+
+async function sendToArduino() {
+  if (!writer) return;
+  // Envía el estado MOSTRADO (mis datos o país); el primitivo lo decide el pulsador físico.
+  const v = PARAMS.map(p => paisActivo && COUNTRIES[paisActivo] ? COUNTRIES[paisActivo][p.key] : p.real);
+  const msg = `${v[0]},${v[1]},${v[2]}\n`;
+  try { await writer.write(new TextEncoder().encode(msg)); } catch (e) {}
+}
+
+async function readLoop() {
+  const decoder = new TextDecoderStream();
+  const readable = port.readable.pipeThrough(decoder);
+  const reader = readable.getReader();
+  let buffer = '';
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += value;
+      let nl;
+      while ((nl = buffer.indexOf('\n')) >= 0) {
+        const line = buffer.slice(0, nl).trim();
+        buffer = buffer.slice(nl + 1);
+        handleSerialLine(line);
+      }
+    }
+  } catch (e) {}
+}
+
+// El Arduino informa el modo según el pulsador.
+// Reconoce los mensajes del firmware: "-> CAZADOR-RECOLECTOR" / "-> TU DIA REAL"
+function handleSerialLine(line) {
+  if (/CAZADOR|PRIMITIVO/i.test(line)) {
+    actualizarSonido();
+    setModo('prim');
+  } else if (/REAL|MIS DATOS/i.test(line)) {
+    actualizarSonido();
+    setModo('real');
+  }
+}
+
+// ─── INIT ───
+buildGauges();
+buildControls();
+buildCountryChips();
+animateGauges();
+document.getElementById('connectBtn').onclick = connectSerial;
+
+// Permite probar el cambio de modo con la barra espaciadora (mantener) sin Arduino
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' && modo !== 'prim') { e.preventDefault(); actualizarSonido(); setModo('prim'); }
+});
+document.addEventListener('keyup', e => {
+  if (e.code === 'Space') { e.preventDefault(); setModo('real'); }
+});
+</script>
+</body>
+</html>
