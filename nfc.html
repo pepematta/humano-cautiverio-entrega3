@@ -85,6 +85,28 @@
 <script src="https://app.protobject.com/framework/p.js"></script>
 <script src="config.js"></script>
 
+<!-- PANTALLA DE INICIO: requiere toque del usuario para activar NFC -->
+<div id="startScreen" style="
+  position:fixed; inset:0; background:#0f1117;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  z-index:999; cursor:pointer; padding:32px;
+" onclick="iniciarNFC()">
+  <div style="font-size:72px; margin-bottom:24px;">📡</div>
+  <div style="font-size:24px; font-weight:700; margin-bottom:12px;">Lector NFC</div>
+  <div style="font-size:14px; color:#8a8a8a; margin-bottom:40px; line-height:1.6;">
+    Toca para activar el lector NFC<br>del teléfono
+  </div>
+  <div style="
+    background:#4A8C6F; color:#fff;
+    padding:14px 32px; border-radius:30px;
+    font-size:16px; font-weight:600;
+    box-shadow: 0 4px 20px rgba(74,140,111,0.4);
+  ">Toca aquí para iniciar</div>
+  <div style="font-size:11px; color:#444; margin-top:24px; font-family:monospace;">
+    Requiere Chrome en Android con NFC activado
+  </div>
+</div>
+
 <div class="title">El humano en cautiverio · Entrega 3</div>
 <div class="subtitle">Lector NFC<br>del teléfono</div>
 
@@ -172,10 +194,26 @@ function toggleReg() {
   if (!regMode) setStatus('📡','ESPERANDO','scanning','Acerca una tarjeta NFC','El lector está activo');
 }
 
-// Iniciar NFC
-Protobject.NFC.start()
-  .then(() => setStatus('📡','ACTIVO','scanning','Acerca una tarjeta NFC','El lector está activo'))
-  .catch(() => setStatus('⚠️','ERROR','error','No se pudo activar el NFC','Revisa permisos del navegador','error'));
+let nfcStarted = false;
+
+function iniciarNFC() {
+  if (nfcStarted) return;
+  nfcStarted = true;
+  // Ocultar pantalla de inicio
+  document.getElementById('startScreen').style.display = 'none';
+
+  Protobject.NFC.start()
+    .then(() => setStatus('📡','ACTIVO','scanning','Acerca una tarjeta NFC','El lector está activo'))
+    .catch((err) => {
+      let msg = 'Revisa permisos del navegador';
+      if (/not supported/i.test(String(err))) msg = 'Este dispositivo no soporta NFC';
+      else if (/permission/i.test(String(err))) msg = 'Permiso denegado — activa NFC en ajustes';
+      setStatus('⚠️','ERROR','error','No se pudo activar el NFC', msg,'error');
+      // Permitir reintentar
+      nfcStarted = false;
+      document.getElementById('startScreen').style.display = 'flex';
+    });
+}
 
 Protobject.NFC.onData((uid) => {
   if (uid === 'err: no compatible') {
