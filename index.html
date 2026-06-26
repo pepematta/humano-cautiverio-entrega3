@@ -659,6 +659,11 @@
         <div class="qr-status-dot"></div>
         <span id="qrStatusText">Esperando conexión…</span>
       </div>
+      <button id="disconnectPhoneBtn"
+        style="display:none;margin-top:14px;font-size:12px;padding:7px 16px;background:transparent;border:1px solid #c0392b;color:#c0392b;border-radius:6px;cursor:pointer;"
+        onclick="setPhoneConnected(false)">
+        Desconectar teléfono
+      </button>
     </div>
   </div>
 
@@ -1378,10 +1383,13 @@ function setPhoneConnected(connected) {
   btn.classList.toggle('connected', connected);
   status.classList.toggle('connected', connected);
   text.textContent = connected ? 'Teléfono conectado ✓' : 'Esperando conexión…';
+  // Mostrar/ocultar botón desconectar
+  const dcBtn = document.getElementById('disconnectPhoneBtn');
+  if (dcBtn) dcBtn.style.display = connected ? '' : 'none';
 }
 
 // ─── CONEXIÓN REAL CON EL TELÉFONO ───
-// Solo se marca conectado cuando hay eventos reales de Protobject
+// Empieza siempre desconectada. Solo se marca conectado con eventos reales.
 try {
   Protobject.Core.onConnected(() => setPhoneConnected(true));
   Protobject.Core.onDisconnected(() => setPhoneConnected(false));
@@ -1389,19 +1397,14 @@ try {
 
 // ─── RECIBIR DESDE TELÉFONO ───
 Protobject.Core.onReceived(function(msg) {
-  // Conexión real confirmada al recibir cualquier mensaje
   setPhoneConnected(true);
 
-  // Responder con ACK para que el teléfono sepa que estamos conectados
-  try { Protobject.Core.send({ action: 'ACK' }).to('nfc.html'); } catch(e) {}
-
+  // El teléfono manda el nombre del país directamente como string
   if (typeof msg === 'string') {
-    if      (msg === 'CL') activarPais('Chile');
-    else if (msg === 'US') activarPais('Estados Unidos');
-    else if (msg === 'PRIM_ON')  setModo('prim');
-    else if (msg === 'PRIM_OFF') setModo('real');
-  } else if (typeof msg === 'object' && msg.action === 'NFC_LINK_RESULT') {
-    handleNfcLink(msg.uid, msg.nfcKey);
+    const pais = Object.keys(COUNTRIES).find(
+      n => n.toLowerCase() === msg.toLowerCase() || COUNTRIES[n].nfcKey === msg.toUpperCase()
+    );
+    if (pais) activarPais(pais);
   }
 });
 
