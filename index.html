@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>El Humano en Cautiverio — Fisicalización</title>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- Protobject Framework -->
+<script src="https://app.protobject.com/framework/p.js"></script>
+<script src="config.js"></script>
+<!-- QR Code generator -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   :root {
     --bg: #FAFAF7;
@@ -38,6 +43,8 @@
   }
 
   body.primitivo { background: var(--bg-primitivo); }
+  body.chile     { background: #F5F0E8; }
+  body.usa       { background: #EAF0F5; }
 
   .container {
     max-width: 1000px;
@@ -67,6 +74,8 @@
   }
 
   body.primitivo .mode-title { color: var(--col-natural); }
+  body.chile     .mode-title { color: #C0392B; }
+  body.usa       .mode-title { color: #2E5BA8; }
 
   .mode-sub {
     font-family: var(--serif);
@@ -280,6 +289,305 @@
     border-color: var(--col-work);
     color: #fff;
   }
+  .chip[data-country="Chile"].active    { background: #C0392B; border-color: #C0392B; }
+  .chip[data-country="Estados Unidos"].active { background: #2E5BA8; border-color: #2E5BA8; }
+
+  /* ─── LONG-PRESS PROGRESS ─── */
+  .chip { position: relative; overflow: hidden; user-select: none; }
+  .chip-progress {
+    position: absolute;
+    left: 0; bottom: 0;
+    height: 3px;
+    width: 0%;
+    background: #C0694A;
+    border-radius: 0 0 20px 20px;
+    transition: none;
+    pointer-events: none;
+  }
+
+  /* ─── MODAL NFC ─── */
+  .nfc-modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .nfc-modal-backdrop.visible { display: flex; }
+  .nfc-modal {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px 28px;
+    max-width: 360px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    animation: modalIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.85); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  .nfc-modal-icon { font-size: 48px; margin-bottom: 12px; }
+  .nfc-modal-title {
+    font-family: var(--serif);
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .nfc-modal-sub {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+  .nfc-modal-status {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-bottom: 20px;
+    min-height: 18px;
+    transition: color 0.3s;
+  }
+  .nfc-modal-status.ok { color: #4A8C6F; font-weight: 600; }
+  .nfc-modal-status.err { color: #C0394A; }
+  .nfc-modal-uid {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    background: #f0ede8;
+    padding: 8px 14px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    display: none;
+    word-break: break-all;
+  }
+  .nfc-modal-uid.visible { display: block; }
+  .nfc-modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+  .nfc-modal-actions button {
+    font-size: 13px;
+    padding: 8px 18px;
+  }
+
+  /* ─── MODAL QR ─── */
+  .qr-modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(6px);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .qr-modal-backdrop.visible { display: flex; }
+  .qr-modal {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px 32px 28px;
+    max-width: 340px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.18);
+    animation: modalIn 0.28s cubic-bezier(0.34,1.56,0.64,1);
+    position: relative;
+  }
+  .qr-modal-close {
+    position: absolute;
+    top: 14px; right: 16px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+  }
+  .qr-modal-close:hover { opacity: 1; }
+  .qr-modal-icon { font-size: 36px; margin-bottom: 10px; }
+  .qr-modal-title {
+    font-family: var(--serif);
+    font-size: 19px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .qr-modal-sub {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+  .qr-box {
+    display: inline-block;
+    padding: 14px;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid var(--border-light);
+    margin-bottom: 16px;
+  }
+  .qr-url {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-tertiary);
+    word-break: break-all;
+    margin-bottom: 18px;
+    padding: 0 8px;
+  }
+  .qr-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    background: #f0ede8;
+    color: var(--text-tertiary);
+    transition: all 0.4s;
+  }
+  .qr-status.connected {
+    background: #e6f4ee;
+    color: #2a7a50;
+    font-weight: 600;
+  }
+  .qr-status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #bbb;
+    transition: background 0.4s;
+  }
+  .qr-status.connected .qr-status-dot { background: #4A8C6F; }
+
+  /* Botón flotante de teléfono */
+  .phone-btn {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: var(--text);
+    color: #fff;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+    z-index: 50;
+  }
+  .phone-btn:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(0,0,0,0.22); }
+  .phone-btn.connected { background: #4A8C6F; }
+  .phone-btn-badge {
+    position: absolute;
+    top: -2px; right: -2px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: #c0392b;
+    border: 2px solid var(--bg);
+    display: none;
+  }
+  .phone-btn.connected .phone-btn-badge {
+    display: block;
+    background: #27ae60;
+  }
+
+  /* ─── CALIBRACIÓN DE SERVOS ─── */
+  .calib-section {
+    margin-top: 32px;
+    text-align: center;
+  }
+  .calib-toggle {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px 10px;
+    opacity: 0.4;
+    transition: opacity 0.2s;
+  }
+  .calib-toggle:hover { opacity: 1; }
+  .calib-panel {
+    display: none;
+    margin-top: 14px;
+    padding: 20px;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    background: #fafaf7;
+  }
+  .calib-panel.visible { display: block; }
+  .calib-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin-bottom: 14px;
+  }
+  .calib-grid {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .calib-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .calib-name {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+  .calib-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .calib-btn {
+    width: 30px; height: 30px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--text);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+    padding: 0;
+    line-height: 1;
+  }
+  .calib-btn:hover { background: var(--border); }
+  .calib-angle {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    min-width: 40px;
+    text-align: center;
+  }
+  .calib-hint {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 10px;
+    font-style: italic;
+  }
 
   @media (max-width: 760px) {
     .gauges { grid-template-columns: 1fr; gap: 44px; }
@@ -292,7 +600,7 @@
   <header>
     <div class="kicker">El humano en cautiverio · Entrega 3</div>
     <h1 class="mode-title" id="modeTitle">Modo: Mis datos</h1>
-    <p class="mode-sub" id="modeSub">Tu uso del tiempo de hoy, medido por tu teléfono y tu calendario.</p>
+    <p class="mode-sub" id="modeSub">Tu uso del tiempo de hoy, ingresado manualmente.</p>
   </header>
 
   <section class="gauges" id="gauges"></section>
@@ -302,19 +610,70 @@
   <section class="country-section">
     <div class="country-label">Comparar con el promedio de un país (OCDE)</div>
     <div class="country-chips" id="countryChips"></div>
+    <div style="font-size:11px;color:var(--text-tertiary);margin-top:10px;font-family:var(--mono);">mantén 5s 🇨🇱 🇺🇸 para enlazar tarjeta NFC</div>
   </section>
+
+  <!-- ─── BOTÓN FLOTANTE TELÉFONO ─── -->
+  <button class="phone-btn" id="phoneBtn" onclick="openQrModal()" title="Conectar teléfono">
+    📱
+    <span class="phone-btn-badge" id="phoneBtnBadge"></span>
+  </button>
+
+  <!-- ─── MODAL QR ─── -->
+  <div class="qr-modal-backdrop" id="qrModalBackdrop" onclick="closeQrModal()">
+    <div class="qr-modal" onclick="event.stopPropagation()">
+      <button class="qr-modal-close" onclick="closeQrModal()">✕</button>
+      <div class="qr-modal-icon">📱</div>
+      <div class="qr-modal-title">Conectar teléfono</div>
+      <div class="qr-modal-sub">Escanea el QR con Chrome en Android<br>para usar el lector NFC del teléfono</div>
+      <div class="qr-box">
+        <div id="qrCanvas"></div>
+      </div>
+      <div class="qr-url" id="qrUrl"></div>
+      <div class="qr-status" id="qrStatus">
+        <div class="qr-status-dot"></div>
+        <span id="qrStatusText">Esperando conexión…</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── MODAL ENLACE NFC ─── -->
+  <div class="nfc-modal-backdrop" id="nfcModalBackdrop" onclick="closeNfcModal()">
+    <div class="nfc-modal" onclick="event.stopPropagation()">
+      <div class="nfc-modal-icon" id="nfcModalIcon">📡</div>
+      <div class="nfc-modal-title" id="nfcModalTitle">Enlazar tarjeta NFC</div>
+      <div class="nfc-modal-sub" id="nfcModalSub"></div>
+      <div class="nfc-modal-status" id="nfcModalStatus">Esperando tarjeta…</div>
+      <div class="nfc-modal-uid" id="nfcModalUID"></div>
+      <div class="nfc-modal-actions">
+        <button class="ghost" onclick="unlinkNfc()">Desenlazar</button>
+        <button onclick="closeNfcModal()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── CALIBRACIÓN DE SERVOS ─── -->
+  <div class="calib-section">
+    <button class="calib-toggle" onclick="toggleCalib()">⚙ calibrar servos</button>
+    <div class="calib-panel" id="calibPanel">
+      <div class="calib-label">Ajuste manual de ángulo · envía directamente al Arduino</div>
+      <div class="calib-grid" id="calibGrid"></div>
+      <div class="calib-hint">Usa + / − para alinear la aguja física con el gauge de pantalla</div>
+    </div>
+  </div>
 
   <div class="serial-row">
     <span class="dot" id="serialDot"></span>
     <span id="serialStatus">Arduino sin conectar</span>
     <button class="ghost" id="connectBtn" style="padding:6px 14px; font-size:13px;">Conectar Arduino</button>
+    <button class="ghost" id="disconnectBtn" style="padding:6px 14px; font-size:13px; display:none;">Desconectar</button>
   </div>
 
 </div>
 
 <script>
 // ─── MODELO DE DATOS ───
-// Categorías OCDE Time Use (min/día, población 15-64), comparables por país.
+// Fuente: OECD Time Use Database (Chile 2020, EE.UU. 2024)
 const PARAMS = [
   {
     key: 'work', name: 'Trabajo', unit: 'min', color: '#2D4A7A',
@@ -339,18 +698,18 @@ const PARAMS = [
 // ─── DATOS OCDE POR PAÍS (min/día, 15-64) ───
 // Fuente: OECD Time Use Database (vía OECD/OWID). Cuidado personal incluye sueño.
 const COUNTRIES = {
-  'Chile':         { flag: '🇨🇱', work: 380, leisure: 280, care: 700 },
-  'México':        { flag: '🇲🇽', work: 480, leisure: 230, care: 660 },
-  'Estados Unidos':{ flag: '🇺🇸', work: 320, leisure: 290, care: 660 },
-  'Francia':       { flag: '🇫🇷', work: 250, leisure: 280, care: 700 },
-  'Alemania':      { flag: '🇩🇪', work: 270, leisure: 300, care: 690 },
-  'España':        { flag: '🇪🇸', work: 280, leisure: 280, care: 690 },
-  'Italia':        { flag: '🇮🇹', work: 260, leisure: 270, care: 700 },
-  'Japón':         { flag: '🇯🇵', work: 350, leisure: 250, care: 660 },
-  'Corea':         { flag: '🇰🇷', work: 380, leisure: 250, care: 650 },
-  'Noruega':       { flag: '🇳🇴', work: 270, leisure: 310, care: 680 },
-  'Reino Unido':   { flag: '🇬🇧', work: 300, leisure: 290, care: 670 },
-  'Canadá':        { flag: '🇨🇦', work: 320, leisure: 280, care: 660 }
+  'Chile':          { flag: '🇨🇱', work: 380, leisure: 255, care: 705, happiness: 6.09, happinessRank: 47, nfcKey: 'CL' },
+  'Estados Unidos': { flag: '🇺🇸', work: 320, leisure: 305, care: 660, happiness: 6.73, happinessRank: 23, nfcKey: 'US' },
+  'México':         { flag: '🇲🇽', work: 480, leisure: 230, care: 660, happiness: 6.68, happinessRank: 24 },
+  'Francia':        { flag: '🇫🇷', work: 250, leisure: 285, care: 705, happiness: 6.36, happinessRank: 39 },
+  'Alemania':       { flag: '🇩🇪', work: 270, leisure: 300, care: 690, happiness: 6.75, happinessRank: 22 },
+  'España':         { flag: '🇪🇸', work: 280, leisure: 280, care: 690, happiness: 6.58, happinessRank: 32 },
+  'Italia':         { flag: '🇮🇹', work: 260, leisure: 275, care: 705, happiness: 6.32, happinessRank: 41 },
+  'Japón':          { flag: '🇯🇵', work: 350, leisure: 255, care: 660, happiness: 6.06, happinessRank: 51 },
+  'Corea':          { flag: '🇰🇷', work: 380, leisure: 250, care: 650, happiness: 5.95, happinessRank: 52 },
+  'Noruega':        { flag: '🇳🇴', work: 270, leisure: 315, care: 680, happiness: 7.34, happinessRank: 7  },
+  'Reino Unido':    { flag: '🇬🇧', work: 300, leisure: 290, care: 670, happiness: 6.75, happinessRank: 20 },
+  'Canadá':         { flag: '🇨🇦', work: 320, leisure: 285, care: 665, happiness: 6.90, happinessRank: 15 }
 };
 
 let modo = 'real'; // 'real' | 'prim'
@@ -370,7 +729,7 @@ function polar(cx, cy, r, deg) {
 function arcPath(cx, cy, r, startDeg, endDeg) {
   const [x1, y1] = polar(cx, cy, r, startDeg);
   const [x2, y2] = polar(cx, cy, r, endDeg);
-  const large = (endDeg - startDeg) % 360 > 180 ? 1 : 0;
+  const large = (endDeg - startDeg) % 360 >= 180 ? 1 : 0; // FIX: >= evita colapso
   return `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}`;
 }
 
@@ -410,12 +769,9 @@ function buildGauges() {
 }
 
 // ─── ACTUALIZAR UN GAUGE (con animación de aguja) ───
-const animState = {}; // key -> current displayed fraction
+const animState = {};
+let rafId = null;
 
-// Valor objetivo de un parámetro según el estado actual:
-// - modo primitivo (pulsador) -> valor primitivo
-// - país activo                -> valor del país
-// - si no                      -> mis datos
 function valorObjetivo(p) {
   if (modo === 'prim') return p.prim;
   if (paisActivo && COUNTRIES[paisActivo]) return COUNTRIES[paisActivo][p.key];
@@ -425,16 +781,12 @@ function valorObjetivo(p) {
 function targetFraction(p) {
   return Math.max(0, Math.min(1, valorObjetivo(p) / p.max));
 }
-function currentValue(p) {
-  return valorObjetivo(p);
-}
 
-// Animación suave de todas las agujas hacia su objetivo
 function animateGauges() {
+  if (rafId) cancelAnimationFrame(rafId);
   let moving = false;
   PARAMS.forEach(p => {
     const target = targetFraction(p);
-    const targetVal = modo === 'real' ? p.real : p.prim;
     if (animState[p.key] === undefined) animState[p.key] = 0;
     const diff = target - animState[p.key];
     if (Math.abs(diff) > 0.002) {
@@ -443,10 +795,8 @@ function animateGauges() {
     } else {
       animState[p.key] = target;
     }
-    // valor mostrado = fracción animada × máximo (interpola limpio, sin NaN)
     const shownVal = Math.round(animState[p.key] * p.max);
     document.getElementById(`val-${p.key}`).textContent = shownVal.toLocaleString('es-CL');
-
     const endDeg = ARC_START + ARC_SWEEP * animState[p.key];
     const fill = document.getElementById(`fill-${p.key}`);
     if (animState[p.key] <= 0.001) fill.setAttribute('d', '');
@@ -455,7 +805,7 @@ function animateGauges() {
     needle.setAttribute('transform', `rotate(${ARC_SWEEP * animState[p.key] - 135} ${CX} ${CY})`);
   });
   updateSonification();
-  if (moving) requestAnimationFrame(animateGauges);
+  if (moving) rafId = requestAnimationFrame(animateGauges);
 }
 
 // ─── SONIFICACIÓN: índice de naturalidad → desafinación continua ───
@@ -464,16 +814,14 @@ let sonidoActivo = false;
 const BASE_FREQ = 220; // La3
 
 function naturalnessIndex() {
-  // Desviación del estado MOSTRADO (mis datos o país) respecto al primitivo.
-  // promedio simple de (1 - desviación normalizada)
+  if (modo === 'prim') return 1; // FIX: modo primitivo = consonancia plena
   let devSum = 0;
   PARAMS.forEach(p => {
     const mostrado = paisActivo && COUNTRIES[paisActivo] ? COUNTRIES[paisActivo][p.key] : p.real;
     const dev = Math.abs(mostrado - p.prim) / p.max;
     devSum += Math.min(1, dev);
   });
-  const meanDev = devSum / PARAMS.length;
-  return 1 - meanDev; // 1 = idéntico al primitivo, 0 = muy lejos
+  return 1 - (devSum / PARAMS.length);
 }
 
 function initAudio() {
@@ -532,25 +880,124 @@ function actualizarSonido() {
 // ─── CAMBIO DE MODO ───
 function refrescarTitulo() {
   const title = document.getElementById('modeTitle');
-  const sub = document.getElementById('modeSub');
+  const sub   = document.getElementById('modeSub');
+  document.body.classList.remove('primitivo', 'chile', 'usa');
   if (modo === 'prim') {
+    document.body.classList.add('primitivo');
     title.textContent = 'Modo: Humano primitivo';
-    sub.textContent = 'Cómo distribuía el tiempo un cazador-recolector.';
+    sub.textContent   = 'Cómo distribuía el tiempo un cazador-recolector.';
   } else if (paisActivo) {
-    title.textContent = 'Promedio: ' + COUNTRIES[paisActivo].flag + ' ' + paisActivo;
-    sub.textContent = 'Distribución media del tiempo (OCDE Time Use, 15–64 años).';
+    const c = COUNTRIES[paisActivo];
+    const hap = c.happiness ? ` · Felicidad ${c.happiness}/10 (#${c.happinessRank})` : '';
+    title.textContent = 'Promedio: ' + c.flag + ' ' + paisActivo;
+    sub.textContent   = 'OCDE Time Use (15–64 años)' + hap;
+    if (c.nfcKey === 'CL') document.body.classList.add('chile');
+    if (c.nfcKey === 'US') document.body.classList.add('usa');
   } else {
     title.textContent = 'Modo: Mis datos';
-    sub.textContent = 'Tu uso del tiempo de hoy, ingresado manualmente.';
+    sub.textContent   = 'Tu uso del tiempo de hoy, ingresado manualmente.';
   }
 }
 
 function setModo(nuevo) {
   if (modo === nuevo) return;
   modo = nuevo;
-  document.body.classList.toggle('primitivo', modo === 'prim');
+  refrescarTitulo();
+  actualizarSonido();
+  animateGauges();
+}
+
+function activarPais(nombre) {
+  if (paisActivo === nombre) {
+    paisActivo = null;
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  } else {
+    paisActivo = nombre;
+    document.querySelectorAll('.chip').forEach(c => {
+      c.classList.toggle('active', c.dataset.country === nombre);
+    });
+  }
+  actualizarSonido();
   refrescarTitulo();
   animateGauges();
+  sendToArduino();
+}
+
+// ─── NFC LINK MODAL ───
+// Permite enlazar una tarjeta NFC a un país manteniendo el chip presionado 5s.
+// Los UIDs se guardan en localStorage con la clave 'nfc_country_uids'.
+let nfcCountryUIDs = {}; // { 'CL': 'A3:4F:2B:11', 'US': '...' }
+let nfcPendingCountry = null; // país esperando ser enlazado
+let longPressTimer = null;
+let longPressChip = null;
+const LONG_PRESS_MS = 5000;
+
+function loadNfcUIDs() {
+  try { nfcCountryUIDs = JSON.parse(localStorage.getItem('nfc_country_uids') || '{}'); } catch(e) {}
+}
+function saveNfcUID(nfcKey, uid) {
+  nfcCountryUIDs[nfcKey] = uid;
+  try { localStorage.setItem('nfc_country_uids', JSON.stringify(nfcCountryUIDs)); } catch(e) {}
+}
+
+// Abre el modal de enlace NFC para un país
+function openNfcLinkModal(nombre) {
+  const c = COUNTRIES[nombre];
+  if (!c.nfcKey) {
+    // País sin soporte NFC (no tiene nfcKey)
+    return;
+  }
+  nfcPendingCountry = nombre;
+  const uid = nfcCountryUIDs[c.nfcKey];
+
+  document.getElementById('nfcModalIcon').textContent  = c.flag;
+  document.getElementById('nfcModalTitle').textContent = 'Enlazar tarjeta NFC';
+  document.getElementById('nfcModalSub').textContent   =
+    `Acerca tu tarjeta NFC al teléfono para enlazarla con ${nombre}.`;
+  document.getElementById('nfcModalStatus').textContent = uid
+    ? '✓ Ya tiene tarjeta enlazada — acerca una nueva para reemplazarla'
+    : 'Esperando tarjeta…';
+  document.getElementById('nfcModalStatus').className = 'nfc-modal-status' + (uid ? ' ok' : '');
+
+  const uidEl = document.getElementById('nfcModalUID');
+  uidEl.textContent = uid ? 'UID actual: ' + uid : '';
+  uidEl.classList.toggle('visible', !!uid);
+
+  document.getElementById('nfcModalBackdrop').classList.add('visible');
+
+  // Avisa al teléfono (nfc.html) que entre en modo enlace para este país
+  Protobject.Core.send({ action: 'LINK_MODE', nfcKey: c.nfcKey }).to('nfc.html');
+}
+
+function closeNfcModal() {
+  nfcPendingCountry = null;
+  document.getElementById('nfcModalBackdrop').classList.remove('visible');
+  // Avisa al teléfono que salga del modo enlace
+  Protobject.Core.send({ action: 'LINK_MODE_OFF' }).to('nfc.html');
+}
+
+function unlinkNfc() {
+  if (!nfcPendingCountry) return;
+  const c = COUNTRIES[nfcPendingCountry];
+  if (c.nfcKey) delete nfcCountryUIDs[c.nfcKey];
+  try { localStorage.setItem('nfc_country_uids', JSON.stringify(nfcCountryUIDs)); } catch(e) {}
+  document.getElementById('nfcModalStatus').textContent = 'Tarjeta desenlazada';
+  document.getElementById('nfcModalStatus').className   = 'nfc-modal-status';
+  document.getElementById('nfcModalUID').classList.remove('visible');
+  setTimeout(closeNfcModal, 1200);
+}
+
+// Recibe el UID desde nfc.html cuando está en modo enlace
+function handleNfcLink(uid, nfcKey) {
+  const nombre = Object.keys(COUNTRIES).find(n => COUNTRIES[n].nfcKey === nfcKey);
+  if (!nombre) return;
+  saveNfcUID(nfcKey, uid);
+  document.getElementById('nfcModalStatus').textContent = '✓ Tarjeta enlazada correctamente';
+  document.getElementById('nfcModalStatus').className   = 'nfc-modal-status ok';
+  const uidEl = document.getElementById('nfcModalUID');
+  uidEl.textContent = 'UID: ' + uid;
+  uidEl.classList.add('visible');
+  setTimeout(closeNfcModal, 1800);
 }
 
 // ─── SELECTOR DE PAÍSES ───
@@ -560,23 +1007,56 @@ function buildCountryChips() {
   Object.keys(COUNTRIES).forEach(nombre => {
     const chip = document.createElement('button');
     chip.className = 'chip';
-    chip.textContent = COUNTRIES[nombre].flag + ' ' + nombre;
-    chip.onclick = () => {
-      if (paisActivo === nombre) {
-        paisActivo = null;           // segundo clic: vuelve a mis datos
-        chip.classList.remove('active');
-      } else {
-        paisActivo = nombre;
-        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
-      }
-      actualizarSonido();
-      refrescarTitulo();
-      animateGauges();
-      sendToArduino();
+    chip.dataset.country = nombre;
+
+    // Barra de progreso del long-press
+    const bar = document.createElement('div');
+    bar.className = 'chip-progress';
+    chip.appendChild(bar);
+
+    const label = document.createTextNode(COUNTRIES[nombre].flag + ' ' + nombre);
+    chip.appendChild(label);
+
+    // Clic corto → activar país
+    chip.onclick = (e) => {
+      // Si fue un long-press que terminó en modal, ignorar el click
+      if (chip._wasLongPress) { chip._wasLongPress = false; return; }
+      activarPais(nombre);
     };
+
+    // Long-press → modal de enlace NFC (solo países con nfcKey)
+    if (COUNTRIES[nombre].nfcKey) {
+      chip.addEventListener('mousedown',  () => startLongPress(chip, nombre, bar));
+      chip.addEventListener('touchstart', (e) => { e.preventDefault(); startLongPress(chip, nombre, bar); }, { passive: false });
+      chip.addEventListener('mouseup',    () => cancelLongPress(bar));
+      chip.addEventListener('mouseleave', () => cancelLongPress(bar));
+      chip.addEventListener('touchend',   () => cancelLongPress(bar));
+      chip.addEventListener('touchcancel',() => cancelLongPress(bar));
+    }
+
     host.appendChild(chip);
   });
+}
+
+function startLongPress(chip, nombre, bar) {
+  cancelLongPress(bar); // limpiar cualquier timer previo
+  const start = Date.now();
+  bar.style.transition = `width ${LONG_PRESS_MS}ms linear`;
+  bar.style.width = '100%';
+  longPressChip = chip;
+  longPressTimer = setTimeout(() => {
+    chip._wasLongPress = true;
+    cancelLongPress(bar, true);
+    openNfcLinkModal(nombre);
+  }, LONG_PRESS_MS);
+}
+
+function cancelLongPress(bar, completed = false) {
+  if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+  if (!completed) {
+    bar.style.transition = 'width 0.2s ease';
+    bar.style.width = '0%';
+  }
 }
 
 // ─── CONTROLES (datos manuales con sliders) ───
@@ -626,54 +1106,122 @@ function buildControls() {
   host.appendChild(sound);
 }
 
-// ─── WEB SERIAL: leer pulsador, enviar datos ───
-let port = null, writer = null;
+// ─── CALIBRACIÓN DE SERVOS ───
+// Offset en grados por servo, persistido en localStorage
+const calibOffset = { work: 0, leisure: 0, care: 0 };
+
+function loadCalib() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('servo_calib') || '{}');
+    Object.assign(calibOffset, saved);
+  } catch(e) {}
+}
+function saveCalib() {
+  try { localStorage.setItem('servo_calib', JSON.stringify(calibOffset)); } catch(e) {}
+}
+
+function toggleCalib() {
+  const panel = document.getElementById('calibPanel');
+  panel.classList.toggle('visible');
+}
+
+function buildCalibPanel() {
+  const grid = document.getElementById('calibGrid');
+  grid.innerHTML = '';
+  PARAMS.forEach(p => {
+    const item = document.createElement('div');
+    item.className = 'calib-item';
+    item.innerHTML = `
+      <div class="calib-name">${p.name}</div>
+      <div class="calib-row">
+        <button class="calib-btn" onclick="adjustCalib('${p.key}', -1)">−</button>
+        <div class="calib-angle" id="calib-val-${p.key}">${calibOffset[p.key] > 0 ? '+' : ''}${calibOffset[p.key]}°</div>
+        <button class="calib-btn" onclick="adjustCalib('${p.key}', +1)">+</button>
+      </div>
+      <button class="calib-btn" style="font-size:10px;width:auto;padding:3px 8px;" onclick="resetCalib('${p.key}')">reset</button>
+    `;
+    grid.appendChild(item);
+  });
+}
+
+function adjustCalib(key, delta) {
+  calibOffset[key] = Math.max(-30, Math.min(30, calibOffset[key] + delta));
+  const el = document.getElementById(`calib-val-${key}`);
+  el.textContent = (calibOffset[key] > 0 ? '+' : '') + calibOffset[key] + '°';
+  saveCalib();
+  sendToArduino(); // reenvía con offset aplicado
+}
+
+function resetCalib(key) {
+  calibOffset[key] = 0;
+  document.getElementById(`calib-val-${key}`).textContent = '0°';
+  saveCalib();
+  sendToArduino();
+}
+
+// ─── WEB SERIAL ───
+let port = null, writer = null, readLoopActive = false;
+
+function setSerialStatus(msg, connected) {
+  document.getElementById('serialStatus').textContent = msg;
+  document.getElementById('serialDot').classList.toggle('on', connected);
+}
 
 async function connectSerial() {
   if (!('serial' in navigator)) {
-    document.getElementById('serialStatus').textContent =
-      'Este navegador no soporta Web Serial. Usa Chrome o Edge de escritorio.';
+    setSerialStatus('Web Serial no disponible. Usa Chrome o Edge.', false);
     return;
   }
   try {
     port = await navigator.serial.requestPort();
     await port.open({ baudRate: 9600 });
     writer = port.writable.getWriter();
-    document.getElementById('serialDot').classList.add('on');
-    document.getElementById('serialStatus').textContent = 'Arduino conectado';
+    setSerialStatus('Arduino conectado', true);
+    document.getElementById('connectBtn').style.display = 'none';
+    document.getElementById('disconnectBtn').style.display = '';
     sendToArduino();
+    readLoopActive = true;
     readLoop();
   } catch (e) {
     let msg;
-    if (e.name === 'NotFoundError') {
-      msg = 'No elegiste un puerto.';
-    } else if (e.name === 'InvalidStateError' || /already open/i.test(e.message)) {
-      msg = 'El puerto ya está abierto en otro lugar.';
-    } else if (e.name === 'NetworkError' || /failed to open|access denied/i.test(e.message)) {
-      msg = 'Puerto ocupado: cierra el Monitor Serial del IDE de Arduino.';
-    } else {
-      msg = 'Error: ' + (e.message || e.name);
-    }
-    document.getElementById('serialStatus').textContent = msg;
-    console.error('Serial error:', e);
+    if (e.name === 'NotFoundError') msg = 'No elegiste un puerto.';
+    else if (e.name === 'InvalidStateError' || /already open/i.test(e.message)) msg = 'El puerto ya está abierto en otro lugar.';
+    else if (e.name === 'NetworkError' || /failed to open|access denied/i.test(e.message)) msg = 'Puerto ocupado: cierra el Monitor Serial del IDE Arduino.';
+    else msg = 'Error: ' + (e.message || e.name);
+    setSerialStatus(msg, false);
   }
+}
+
+async function disconnectSerial() {
+  readLoopActive = false;
+  if (writer) { try { writer.releaseLock(); } catch(_) {} writer = null; }
+  if (port)   { try { await port.close(); }  catch(_) {} port = null; }
+  setSerialStatus('Arduino desconectado', false);
+  document.getElementById('connectBtn').style.display = '';
+  document.getElementById('disconnectBtn').style.display = 'none';
 }
 
 async function sendToArduino() {
   if (!writer) return;
-  // Envía el estado MOSTRADO (mis datos o país); el primitivo lo decide el pulsador físico.
-  const v = PARAMS.map(p => paisActivo && COUNTRIES[paisActivo] ? COUNTRIES[paisActivo][p.key] : p.real);
-  const msg = `${v[0]},${v[1]},${v[2]}\n`;
-  try { await writer.write(new TextEncoder().encode(msg)); } catch (e) {}
+  // Valores del estado actual + offset de calibración
+  const v = PARAMS.map(p => {
+    const minutos = paisActivo && COUNTRIES[paisActivo] ? COUNTRIES[paisActivo][p.key] : p.real;
+    const angulo = Math.round(minutos / p.max * 180) + calibOffset[p.key];
+    return Math.max(0, Math.min(180, angulo));
+  });
+  // Protocolo: "A:angW,angL,angC\n" para calibración directa de ángulos
+  const msg = `A:${v[0]},${v[1]},${v[2]}\n`;
+  try { await writer.write(new TextEncoder().encode(msg)); } catch(e) {}
 }
 
 async function readLoop() {
   const decoder = new TextDecoderStream();
-  const readable = port.readable.pipeThrough(decoder);
+  let readable;
+  try { readable = port.readable.pipeThrough(decoder); } catch(e) { return; }
   const reader = readable.getReader();
   let buffer = '';
   try {
-    while (true) {
+    while (readLoopActive) {
       const { value, done } = await reader.read();
       if (done) break;
       buffer += value;
@@ -684,31 +1232,104 @@ async function readLoop() {
         handleSerialLine(line);
       }
     }
-  } catch (e) {}
-}
-
-// El Arduino informa el modo según el pulsador.
-// Reconoce los mensajes del firmware: "-> CAZADOR-RECOLECTOR" / "-> TU DIA REAL"
-function handleSerialLine(line) {
-  if (/CAZADOR|PRIMITIVO/i.test(line)) {
-    actualizarSonido();
-    setModo('prim');
-  } else if (/REAL|MIS DATOS/i.test(line)) {
-    actualizarSonido();
-    setModo('real');
+  } catch(e) {
+    if (readLoopActive) {
+      setSerialStatus('Conexión perdida. Reconecta el Arduino.', false);
+      document.getElementById('connectBtn').style.display = '';
+      document.getElementById('disconnectBtn').style.display = 'none';
+      writer = null; port = null; readLoopActive = false;
+    }
+  } finally {
+    try { reader.releaseLock(); } catch(_) {}
   }
 }
 
+function handleSerialLine(line) {
+  if (/CAZADOR|PRIMITIVO/i.test(line)) { setModo('prim'); }
+  else if (/REAL|MIS DATOS/i.test(line)) { setModo('real'); }
+  else if (line.startsWith('NFC:')) {
+    const key = line.slice(4).trim();
+    const nombre = Object.keys(COUNTRIES).find(n => COUNTRIES[n].nfcKey === key);
+    if (nombre) activarPais(nombre);
+  }
+}
+
+// ─── QR MODAL ───
+let qrGenerated = false;
+let phoneConnected = false;
+
+function openQrModal() {
+  document.getElementById('qrModalBackdrop').classList.add('visible');
+  if (!qrGenerated) generateQR();
+}
+
+function closeQrModal() {
+  document.getElementById('qrModalBackdrop').classList.remove('visible');
+}
+
+function generateQR() {
+  // La URL de nfc.html en el mismo servidor donde está index.html
+  const base = window.location.href.replace(/\/[^/]*$/, '');
+  const url  = base + '/nfc.html';
+
+  document.getElementById('qrUrl').textContent = url;
+
+  const canvas = document.getElementById('qrCanvas');
+  canvas.innerHTML = '';
+  new QRCode(canvas, {
+    text: url,
+    width: 200,
+    height: 200,
+    colorDark: '#1a1a1a',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+  qrGenerated = true;
+}
+
+function setPhoneConnected(connected) {
+  phoneConnected = connected;
+  const btn    = document.getElementById('phoneBtn');
+  const status = document.getElementById('qrStatus');
+  const text   = document.getElementById('qrStatusText');
+  btn.classList.toggle('connected', connected);
+  status.classList.toggle('connected', connected);
+  text.textContent = connected ? 'Teléfono conectado ✓' : 'Esperando conexión…';
+}
+
+// Detectar conexión del teléfono vía Protobject
+try {
+  Protobject.Core.onConnected(() => setPhoneConnected(true));
+  Protobject.Core.onDisconnected(() => setPhoneConnected(false));
+} catch(e) {}
+
+// ─── RECIBIR DESDE TELÉFONO (Protobject NFC) ───
+Protobject.Core.onReceived(function(msg) {
+  if (typeof msg === 'string') {
+    // Mensajes simples de activación de país
+    if (msg === 'CL') activarPais('Chile');
+    else if (msg === 'US') activarPais('Estados Unidos');
+    else if (msg === 'PRIM_ON') setModo('prim');
+    else if (msg === 'PRIM_OFF') setModo('real');
+  } else if (typeof msg === 'object' && msg.action === 'NFC_LINK_RESULT') {
+    // El teléfono envió un UID para enlazar
+    handleNfcLink(msg.uid, msg.nfcKey);
+  }
+});
+
 // ─── INIT ───
+loadCalib();
+loadNfcUIDs();
 buildGauges();
 buildControls();
 buildCountryChips();
+buildCalibPanel();
 animateGauges();
-document.getElementById('connectBtn').onclick = connectSerial;
+document.getElementById('connectBtn').onclick    = connectSerial;
+document.getElementById('disconnectBtn').onclick = disconnectSerial;
 
-// Permite probar el cambio de modo con la barra espaciadora (mantener) sin Arduino
 document.addEventListener('keydown', e => {
-  if (e.code === 'Space' && modo !== 'prim') { e.preventDefault(); actualizarSonido(); setModo('prim'); }
+  if (e.code === 'Space' && modo !== 'prim') { e.preventDefault(); setModo('prim'); }
 });
 document.addEventListener('keyup', e => {
   if (e.code === 'Space') { e.preventDefault(); setModo('real'); }

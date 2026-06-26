@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lector NFC — Humano en Cautiverio</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, sans-serif;
+      background: #0f1117;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 24px;
+      text-align: center;
+    }
+    .title { font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: #8a8a8a; margin-bottom: 12px; font-family: monospace; }
+    .subtitle { font-size: 22px; font-weight: 700; margin-bottom: 40px; line-height: 1.2; }
+
+    .status-ring {
+      width: 160px; height: 160px; border-radius: 50%;
+      border: 3px solid #333;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      margin: 0 auto 32px;
+      transition: all 0.4s ease;
+    }
+    .status-ring.scanning { border-color: #4A8C6F; animation: pulse 1.8s infinite; }
+    .status-ring.detected-chile { border-color: #C0392B; box-shadow: 0 0 0 10px rgba(192,57,43,0.15); }
+    .status-ring.detected-usa   { border-color: #2E5BA8; box-shadow: 0 0 0 10px rgba(46,91,168,0.15); }
+    .status-ring.error { border-color: #888; }
+    @keyframes pulse {
+      0%,100% { box-shadow: 0 0 0 8px rgba(74,140,111,0.12); }
+      50%      { box-shadow: 0 0 0 18px rgba(74,140,111,0.04); }
+    }
+    .status-icon { font-size: 52px; }
+    .status-text { font-size: 11px; color: #8a8a8a; margin-top: 6px; font-family: monospace; letter-spacing: 0.06em; }
+
+    .msg { font-size: 16px; color: #ccc; margin-bottom: 6px; min-height: 24px; }
+    .msg.success { color: #4A8C6F; font-weight: 700; font-size: 18px; }
+    .msg.error   { color: #666; }
+    .submsg { font-size: 12px; color: #555; margin-bottom: 36px; min-height: 18px; font-family: monospace; }
+
+    .cards-section { width: 100%; max-width: 300px; margin-bottom: 24px; }
+    .cards-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #555; font-family: monospace; margin-bottom: 10px; }
+    .card-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 14px; border: 1px solid #222; border-radius: 10px;
+      margin-bottom: 7px; background: #1a1a1a; transition: all 0.3s;
+    }
+    .card-item.active-chile { border-color: #C0392B; background: rgba(192,57,43,0.08); }
+    .card-item.active-usa   { border-color: #2E5BA8; background: rgba(46,91,168,0.08); }
+    .card-flag { font-size: 24px; }
+    .card-info { text-align: left; }
+    .card-name { font-size: 13px; font-weight: 600; }
+    .card-uid  { font-size: 10px; color: #555; font-family: monospace; margin-top: 2px; }
+    .card-uid.ok { color: #4A8C6F; }
+
+    .btn-reg {
+      background: transparent; border: 1px solid #333; color: #aaa;
+      padding: 9px 18px; border-radius: 8px; font-size: 12px;
+      cursor: pointer; font-family: inherit; transition: all 0.2s;
+    }
+    .btn-reg:hover { border-color: #4A8C6F; color: #4A8C6F; }
+    .btn-reg.active { border-color: #C0694A; color: #C0694A; }
+
+    .reg-panel {
+      display: none; width: 100%; max-width: 300px;
+      background: #1a1a1a; border: 1px solid #333; border-radius: 12px;
+      padding: 18px; margin-top: 14px; text-align: left;
+    }
+    .reg-panel.visible { display: block; }
+    .reg-panel h3 { font-size: 13px; margin-bottom: 10px; color: #ccc; }
+    select {
+      width: 100%; background: #222; border: 1px solid #444; color: #fff;
+      padding: 8px 10px; border-radius: 6px; font-size: 13px; margin: 6px 0 10px;
+    }
+    .reg-hint { font-size: 11px; color: #555; font-style: italic; margin-top: 6px; }
+  </style>
+</head>
+<body>
+<script src="https://app.protobject.com/framework/p.js"></script>
+<script src="config.js"></script>
+
+<div class="title">El humano en cautiverio · Entrega 3</div>
+<div class="subtitle">Lector NFC<br>del teléfono</div>
+
+<div class="status-ring scanning" id="ring">
+  <div class="status-icon" id="sIcon">📡</div>
+  <div class="status-text" id="sText">ESPERANDO</div>
+</div>
+
+<div class="msg" id="msg">Acerca una tarjeta NFC</div>
+<div class="submsg" id="submsg">El lector está activo</div>
+
+<div class="cards-section">
+  <div class="cards-label">Tarjetas registradas</div>
+  <div class="card-item" id="cardCL">
+    <div class="card-flag">🇨🇱</div>
+    <div class="card-info">
+      <div class="card-name">Chile</div>
+      <div class="card-uid" id="uidCL">Sin registrar</div>
+    </div>
+  </div>
+  <div class="card-item" id="cardUS">
+    <div class="card-flag">🇺🇸</div>
+    <div class="card-info">
+      <div class="card-name">Estados Unidos</div>
+      <div class="card-uid" id="uidUS">Sin registrar</div>
+    </div>
+  </div>
+</div>
+
+<button class="btn-reg" id="btnReg" onclick="toggleReg()">⚙️ Registrar tarjetas</button>
+
+<div class="reg-panel" id="regPanel">
+  <h3>Modo registro</h3>
+  <div style="font-size:12px;color:#888;">1. Elige el país:</div>
+  <select id="selPais">
+    <option value="CL">🇨🇱 Chile</option>
+    <option value="US">🇺🇸 Estados Unidos</option>
+  </select>
+  <div style="font-size:12px;color:#888;">2. Acerca la tarjeta — se guarda automáticamente</div>
+  <div class="reg-hint" id="regResult"></div>
+</div>
+
+<script>
+let uids = {};
+let regMode = false;
+let linkMode = false;   // modo enlace activado desde index.html
+let linkNfcKey = null;  // qué país se está enlazando
+
+function loadUIDs() {
+  try { uids = JSON.parse(localStorage.getItem('nfc_uids') || '{}'); } catch(e) {}
+  refreshCards();
+}
+function saveUID(k, v) {
+  uids[k] = v;
+  try { localStorage.setItem('nfc_uids', JSON.stringify(uids)); } catch(e) {}
+  refreshCards();
+}
+function refreshCards() {
+  ['CL','US'].forEach(k => {
+    const el = document.getElementById('uid'+k);
+    if (uids[k]) { el.textContent = uids[k]; el.classList.add('ok'); }
+    else          { el.textContent = 'Sin registrar'; el.classList.remove('ok'); }
+  });
+}
+
+function setStatus(icon, text, ringCls, msg, submsg, msgCls='') {
+  document.getElementById('sIcon').textContent = icon;
+  document.getElementById('sText').textContent = text;
+  document.getElementById('ring').className = 'status-ring ' + ringCls;
+  const m = document.getElementById('msg');
+  m.textContent = msg; m.className = 'msg ' + msgCls;
+  document.getElementById('submsg').textContent = submsg;
+}
+function highlightCard(k) {
+  document.getElementById('cardCL').className = 'card-item' + (k==='CL' ? ' active-chile' : '');
+  document.getElementById('cardUS').className = 'card-item' + (k==='US' ? ' active-usa' : '');
+}
+
+function toggleReg() {
+  regMode = !regMode;
+  document.getElementById('regPanel').classList.toggle('visible', regMode);
+  const btn = document.getElementById('btnReg');
+  btn.textContent = regMode ? '✕ Cerrar' : '⚙️ Registrar tarjetas';
+  btn.classList.toggle('active', regMode);
+  if (!regMode) setStatus('📡','ESPERANDO','scanning','Acerca una tarjeta NFC','El lector está activo');
+}
+
+// Iniciar NFC
+Protobject.NFC.start()
+  .then(() => setStatus('📡','ACTIVO','scanning','Acerca una tarjeta NFC','El lector está activo'))
+  .catch(() => setStatus('⚠️','ERROR','error','No se pudo activar el NFC','Revisa permisos del navegador','error'));
+
+Protobject.NFC.onData((uid) => {
+  if (uid === 'err: no compatible') {
+    setStatus('❓','NO COMPATIBLE','error','Tarjeta no compatible','Usa tarjetas NFC MIFARE 13.56MHz','error');
+    return;
+  }
+
+  if (regMode) {
+    const k = document.getElementById('selPais').value;
+    saveUID(k, uid);
+    const nombre = k==='CL' ? 'Chile 🇨🇱' : 'EE.UU. 🇺🇸';
+    document.getElementById('regResult').textContent = '✓ Guardado: ' + nombre + ' → ' + uid;
+    setStatus('✅','GUARDADO', k==='CL'?'detected-chile':'detected-usa',
+      'Tarjeta registrada: '+nombre, 'UID: '+uid, 'success');
+    highlightCard(k);
+    setTimeout(() => {
+      setStatus('📡','REGISTRO','','Acerca la siguiente tarjeta','o cierra el panel');
+      highlightCard(null);
+    }, 2500);
+    return;
+  }
+
+  if (linkMode && linkNfcKey) {
+    // Modo enlace: enviar UID al computador para que lo guarde
+    Protobject.Core.send({ action: 'NFC_LINK_RESULT', uid, nfcKey: linkNfcKey }).to('index.html');
+    const flag = linkNfcKey === 'CL' ? '🇨🇱' : '🇺🇸';
+    setStatus('✅','ENVIADO', linkNfcKey==='CL'?'detected-chile':'detected-usa',
+      flag + ' Tarjeta enlazada', 'UID enviado al computador', 'success');
+    setTimeout(() => {
+      linkMode = false; linkNfcKey = null;
+      setStatus('📡','ACTIVO','scanning','Acerca una tarjeta NFC','El lector está activo');
+    }, 2000);
+    return;
+  }
+
+  // Modo normal
+  if (uids['CL'] && uid === uids['CL']) {
+    setStatus('🇨🇱','CHILE','detected-chile','Chile detectado','Enviando a la visualización…','success');
+    highlightCard('CL');
+    Protobject.Core.send('CL').to('index.html');
+  } else if (uids['US'] && uid === uids['US']) {
+    setStatus('🇺🇸','EE.UU.','detected-usa','EE.UU. detectado','Enviando a la visualización…','success');
+    highlightCard('US');
+    Protobject.Core.send('US').to('index.html');
+  } else {
+    setStatus('❓','DESCONOCIDA','error','Tarjeta no registrada','UID: '+uid+' — regístrala abajo','error');
+  }
+  setTimeout(() => {
+    setStatus('📡','ESPERANDO','scanning','Acerca una tarjeta NFC','El lector está activo');
+    highlightCard(null);
+  }, 3000);
+});
+
+loadUIDs();
+
+// Recibir instrucciones del computador (index.html)
+Protobject.Core.onReceived(function(msg) {
+  if (!msg || typeof msg !== 'object') return;
+  if (msg.action === 'LINK_MODE') {
+    // Entrar en modo enlace para un país específico
+    linkMode    = true;
+    linkNfcKey  = msg.nfcKey;
+    const flag  = msg.nfcKey === 'CL' ? '🇨🇱' : '🇺🇸';
+    setStatus('🔗','ENLACE','scanning',
+      flag + ' Acerca la tarjeta a enlazar',
+      'El computador está esperando el UID');
+  } else if (msg.action === 'LINK_MODE_OFF') {
+    linkMode = false; linkNfcKey = null;
+    setStatus('📡','ACTIVO','scanning','Acerca una tarjeta NFC','El lector está activo');
+  }
+});
+</script>
+</body>
+</html>
