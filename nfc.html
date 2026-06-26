@@ -212,6 +212,11 @@ Protobject.NFC.onData((uid) => {
   }
 
   // Modo normal
+  // FIX: enviar NFC_READ con el UID crudo para que el computador
+  // lo compare con su propio localStorage (nfc_country_uids)
+  Protobject.Core.send({ action: 'NFC_READ', uid }).to('index.html');
+
+  // También intentar con UIDs guardados localmente como fallback
   if (uids['CL'] && uid === uids['CL']) {
     setStatus('🇨🇱','CHILE','detected-chile','Chile detectado','Enviando a la visualización…','success');
     highlightCard('CL');
@@ -221,7 +226,7 @@ Protobject.NFC.onData((uid) => {
     highlightCard('US');
     Protobject.Core.send('US').to('index.html');
   } else {
-    setStatus('❓','DESCONOCIDA','error','Tarjeta no registrada','UID: '+uid+' — regístrala abajo','error');
+    setStatus('❓','DESCONOCIDA','error','Tarjeta no registrada','UID: '+uid+' — regístrala con long-press','error');
   }
   setTimeout(() => {
     setStatus('📡','ESPERANDO','scanning','Acerca una tarjeta NFC','El lector está activo');
@@ -230,6 +235,12 @@ Protobject.NFC.onData((uid) => {
 });
 
 loadUIDs();
+
+// PING periódico para que el computador sepa que el teléfono está conectado
+// (Protobject.Core.onConnected no se dispara si ya estaba conectado al cargar)
+setInterval(() => {
+  try { Protobject.Core.send('PING').to('index.html'); } catch(e) {}
+}, 3000);
 
 // Recibir instrucciones del computador (index.html)
 Protobject.Core.onReceived(function(msg) {

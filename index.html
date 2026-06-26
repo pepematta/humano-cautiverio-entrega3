@@ -540,7 +540,7 @@
   }
   .calib-grid {
     display: flex;
-    gap: 24px;
+    gap: 32px;
     justify-content: center;
     flex-wrap: wrap;
   }
@@ -549,6 +549,7 @@
     flex-direction: column;
     align-items: center;
     gap: 8px;
+    min-width: 160px;
   }
   .calib-name {
     font-family: var(--mono);
@@ -561,26 +562,50 @@
     gap: 8px;
   }
   .calib-btn {
-    width: 30px; height: 30px;
+    width: 34px; height: 34px;
     border-radius: 6px;
     border: 1px solid var(--border);
     background: #fff;
     color: var(--text);
-    font-size: 16px;
+    font-size: 18px;
     cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    transition: background 0.15s;
+    transition: background 0.1s;
     padding: 0;
     line-height: 1;
+    user-select: none;
   }
-  .calib-btn:hover { background: var(--border); }
+  .calib-btn:hover  { background: #eee; }
+  .calib-btn:active { background: var(--border); }
   .calib-angle {
     font-family: var(--mono);
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 15px;
+    font-weight: 700;
     color: var(--text);
-    min-width: 40px;
+    min-width: 52px;
     text-align: center;
+  }
+  /* Slider de ángulo directo */
+  .calib-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 140px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+    border: none;
+    padding: 0;
+  }
+  .calib-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: #555;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    cursor: pointer;
   }
   .calib-hint {
     font-size: 11px;
@@ -1125,37 +1150,96 @@ function toggleCalib() {
   panel.classList.toggle('visible');
 }
 
+// calibOffset ahora guarda el ángulo ABSOLUTO del servo (0-180)
+// en lugar de un delta, para control total
+const calibAngle = { work: -1, leisure: -1, care: -1 }; // -1 = no sobreescrito
+
+function loadCalibAngles() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('servo_calib_abs') || '{}');
+    Object.assign(calibAngle, saved);
+  } catch(e) {}
+}
+function saveCalibAngles() {
+  try { localStorage.setItem('servo_calib_abs', JSON.stringify(calibAngle)); } catch(e) {}
+}
+
+// Timers para repetición al mantener presionado
+const calibRepeatTimer = {};
+
 function buildCalibPanel() {
   const grid = document.getElementById('calibGrid');
   grid.innerHTML = '';
   PARAMS.forEach(p => {
+    // Ángulo actual calculado para este parámetro
+    const computedAngle = () => {
+      const minutos = paisActivo && COUNTRIES[paisActivo] ? COUNTRIES[paisActivo][p.key] : p.real;
+      return Math.round(minutos / p.max * 180);
+    };
+    const currentAng = calibAngle[p.key] >= 0 ? calibAngle[p.key] : computedAngle();
+
     const item = document.createElement('div');
     item.className = 'calib-item';
     item.innerHTML = `
       <div class="calib-name">${p.name}</div>
       <div class="calib-row">
-        <button class="calib-btn" onclick="adjustCalib('${p.key}', -1)">−</button>
-        <div class="calib-angle" id="calib-val-${p.key}">${calibOffset[p.key] > 0 ? '+' : ''}${calibOffset[p.key]}°</div>
-        <button class="calib-btn" onclick="adjustCalib('${p.key}', +1)">+</button>
+        <button class="calib-btn" id="calib-minus-${p.key}">−</button>
+        <div class="calib-angle" id="calib-val-${p.key}">${currentAng}°</div>
+        <button class="calib-btn" id="calib-plus-${p.key}">+</button>
       </div>
-      <button class="calib-btn" style="font-size:10px;width:auto;padding:3px 8px;" onclick="resetCalib('${p.key}')">reset</button>
+      <input type="range" class="calib-slider" id="calib-slider-${p.key}"
+        min="0" max="180" value="${currentAng}">
+      <button class="calib-btn" style="font-size:10px;width:auto;padding:3px 10px;"
+        onclick="resetCalibAngle('${p.key}')">auto</button>
     `;
     grid.appendChild(item);
+
+    // Slider: control directo de ángulo
+    const slider = item.querySelector(`#calib-slider-${p.key}`);
+    slider.addEventListener('input', () => {
+      const ang = parseInt(slider.value);
+      calibAngle[p.key] = ang;
+      document.getElementById(`calib-val-${p.key}`).textContent = ang + '°';
+      saveCalibAngles();
+      sendToArduino();
+    });
+
+    // Botones +/- con repetición al mantener presionado
+    setupCalibBtn(`calib-minus-${p.key}`, p.key, -1);
+    setupCalibBtn(`calib-plus-${p.key}`,  p.key, +1);
   });
 }
 
-function adjustCalib(key, delta) {
-  calibOffset[key] = Math.max(-30, Math.min(30, calibOffset[key] + delta));
-  const el = document.getElementById(`calib-val-${key}`);
-  el.textContent = (calibOffset[key] > 0 ? '+' : '') + calibOffset[key] + '°';
-  saveCalib();
-  sendToArduino(); // reenvía con offset aplicado
+function setupCalibBtn(id, key, delta) {
+  const btn = document.getElementById(id);
+  let interval = null;
+  const step = () => {
+    const minutos = paisActivo && COUNTRIES[paisActivo] ? COUNTRIES[paisActivo][key] : PARAMS.find(p=>p.key===key).real;
+    const maxMin  = PARAMS.find(p=>p.key===key).max;
+    const current = calibAngle[key] >= 0 ? calibAngle[key] : Math.round(minutos / maxMin * 180);
+    const next = Math.max(0, Math.min(180, current + delta));
+    calibAngle[key] = next;
+    document.getElementById(`calib-val-${key}`).textContent = next + '°';
+    document.getElementById(`calib-slider-${key}`).value = next;
+    saveCalibAngles();
+    sendToArduino();
+  };
+  btn.addEventListener('mousedown',   () => { step(); interval = setInterval(step, 120); });
+  btn.addEventListener('touchstart',  (e) => { e.preventDefault(); step(); interval = setInterval(step, 120); }, { passive: false });
+  btn.addEventListener('mouseup',     () => clearInterval(interval));
+  btn.addEventListener('mouseleave',  () => clearInterval(interval));
+  btn.addEventListener('touchend',    () => clearInterval(interval));
+  btn.addEventListener('touchcancel', () => clearInterval(interval));
 }
 
-function resetCalib(key) {
-  calibOffset[key] = 0;
-  document.getElementById(`calib-val-${key}`).textContent = '0°';
-  saveCalib();
+function resetCalibAngle(key) {
+  calibAngle[key] = -1; // vuelve a calcularse automáticamente
+  const minutos = paisActivo && COUNTRIES[paisActivo] ? COUNTRIES[paisActivo][key] : PARAMS.find(p=>p.key===key).real;
+  const maxMin  = PARAMS.find(p=>p.key===key).max;
+  const ang = Math.round(minutos / maxMin * 180);
+  document.getElementById(`calib-val-${key}`).textContent = ang + '°';
+  document.getElementById(`calib-slider-${key}`).value = ang;
+  saveCalibAngles();
   sendToArduino();
 }
 
@@ -1203,13 +1287,12 @@ async function disconnectSerial() {
 
 async function sendToArduino() {
   if (!writer) return;
-  // Valores del estado actual + offset de calibración
   const v = PARAMS.map(p => {
+    // Si hay ángulo de calibración manual, usarlo; si no, calcular desde minutos
+    if (calibAngle[p.key] >= 0) return calibAngle[p.key];
     const minutos = paisActivo && COUNTRIES[paisActivo] ? COUNTRIES[paisActivo][p.key] : p.real;
-    const angulo = Math.round(minutos / p.max * 180) + calibOffset[p.key];
-    return Math.max(0, Math.min(180, angulo));
+    return Math.max(0, Math.min(180, Math.round(minutos / p.max * 180)));
   });
-  // Protocolo: "A:angW,angL,angC\n" para calibración directa de ángulos
   const msg = `A:${v[0]},${v[1]},${v[2]}\n`;
   try { await writer.write(new TextEncoder().encode(msg)); } catch(e) {}
 }
@@ -1298,6 +1381,8 @@ function setPhoneConnected(connected) {
 }
 
 // Detectar conexión del teléfono vía Protobject
+// onConnected no se dispara si ya estaba conectado al cargar,
+// así que también revisamos al recibir cualquier mensaje.
 try {
   Protobject.Core.onConnected(() => setPhoneConnected(true));
   Protobject.Core.onDisconnected(() => setPhoneConnected(false));
@@ -1305,20 +1390,34 @@ try {
 
 // ─── RECIBIR DESDE TELÉFONO (Protobject NFC) ───
 Protobject.Core.onReceived(function(msg) {
+  // Cualquier mensaje implica que el teléfono está conectado
+  setPhoneConnected(true);
+
   if (typeof msg === 'string') {
-    // Mensajes simples de activación de país
     if (msg === 'CL') activarPais('Chile');
     else if (msg === 'US') activarPais('Estados Unidos');
     else if (msg === 'PRIM_ON') setModo('prim');
     else if (msg === 'PRIM_OFF') setModo('real');
-  } else if (typeof msg === 'object' && msg.action === 'NFC_LINK_RESULT') {
-    // El teléfono envió un UID para enlazar
-    handleNfcLink(msg.uid, msg.nfcKey);
+    else if (msg === 'PING') { /* solo heartbeat, no hacer nada */ }
+  } else if (typeof msg === 'object') {
+    if (msg.action === 'NFC_LINK_RESULT') {
+      handleNfcLink(msg.uid, msg.nfcKey);
+    } else if (msg.action === 'NFC_READ') {
+      // FIX: el teléfono manda el UID y el nfcKey ya resuelto
+      // buscar en nfcCountryUIDs si ese UID corresponde a algún país
+      const uid = msg.uid;
+      const matchKey = Object.keys(nfcCountryUIDs).find(k => nfcCountryUIDs[k] === uid);
+      if (matchKey) {
+        const nombre = Object.keys(COUNTRIES).find(n => COUNTRIES[n].nfcKey === matchKey);
+        if (nombre) activarPais(nombre);
+      }
+    }
   }
 });
 
 // ─── INIT ───
 loadCalib();
+loadCalibAngles();
 loadNfcUIDs();
 buildGauges();
 buildControls();
