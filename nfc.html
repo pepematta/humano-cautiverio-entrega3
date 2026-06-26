@@ -15,52 +15,52 @@
       padding: 32px 24px; text-align: center;
     }
 
-    /* ── Pantalla de inicio ── */
     #startScreen {
       position: fixed; inset: 0; background: #0f1117;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      z-index: 999; padding: 32px; cursor: pointer;
+      z-index: 999; padding: 32px;
     }
-    .start-icon { font-size: 80px; margin-bottom: 20px; }
+    .start-icon  { font-size: 80px; margin-bottom: 20px; }
     .start-title { font-size: 26px; font-weight: 700; margin-bottom: 10px; }
-    .start-sub { font-size: 14px; color: #8a8a8a; margin-bottom: 40px; line-height: 1.6; }
-    .start-btn {
+    .start-sub   { font-size: 14px; color: #8a8a8a; margin-bottom: 40px; line-height: 1.6; }
+    .start-btn   {
       background: #4A8C6F; color: #fff;
       padding: 16px 40px; border-radius: 50px;
       font-size: 17px; font-weight: 700;
       box-shadow: 0 6px 24px rgba(74,140,111,0.4);
+      border: none; cursor: pointer;
     }
     .start-note { font-size: 11px; color: #333; margin-top: 20px; font-family: monospace; }
 
-    /* ── App principal ── */
-    .kicker { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #555; margin-bottom: 10px; font-family: monospace; }
+    .kicker   { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #555; margin-bottom: 10px; font-family: monospace; }
     .subtitle { font-size: 22px; font-weight: 700; margin-bottom: 36px; }
 
     .ring {
       width: 160px; height: 160px; border-radius: 50%;
       border: 3px solid #333;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
       margin: 0 auto 28px; transition: all 0.4s;
     }
-    .ring.scanning      { border-color: #4A8C6F; animation: pulse 1.8s infinite; }
-    .ring.chile         { border-color: #C0392B; box-shadow: 0 0 0 10px rgba(192,57,43,0.15); }
-    .ring.usa           { border-color: #2E5BA8; box-shadow: 0 0 0 10px rgba(46,91,168,0.15); }
-    .ring.error         { border-color: #666; }
+    .ring.scanning { border-color: #4A8C6F; animation: pulse 1.8s infinite; }
+    .ring.chile    { border-color: #C0392B; box-shadow: 0 0 0 10px rgba(192,57,43,0.15); }
+    .ring.usa      { border-color: #2E5BA8; box-shadow: 0 0 0 10px rgba(46,91,168,0.15); }
+    .ring.error    { border-color: #666; }
     @keyframes pulse {
       0%,100% { box-shadow: 0 0 0 8px rgba(74,140,111,0.1); }
       50%      { box-shadow: 0 0 0 20px rgba(74,140,111,0.03); }
     }
-    .ring-icon { font-size: 52px; line-height: 1; }
+    .ring-icon  { font-size: 52px; line-height: 1; }
     .ring-label { font-size: 10px; color: #555; margin-top: 6px; font-family: monospace; letter-spacing: 0.06em; }
 
-    .msg { font-size: 17px; color: #ccc; margin-bottom: 6px; min-height: 24px; transition: color 0.3s; }
-    .msg.ok  { color: #4A8C6F; font-weight: 700; font-size: 19px; }
-    .msg.err { color: #666; }
-    .submsg  { font-size: 12px; color: #444; margin-bottom: 32px; min-height: 18px; font-family: monospace; }
+    .msg    { font-size: 17px; color: #ccc; margin-bottom: 6px; min-height: 24px; }
+    .msg.ok { color: #4A8C6F; font-weight: 700; }
+    .msg.err{ color: #c0392b; }
+    .submsg { font-size: 12px; color: #444; margin-bottom: 32px; min-height: 18px; font-family: monospace; }
 
-    /* ── Tarjetas ── */
-    .cards { width: 100%; max-width: 300px; margin-bottom: 20px; }
+    /* Tarjetas */
+    .cards       { width: 100%; max-width: 300px; margin-bottom: 20px; }
     .cards-label { font-size: 10px; color: #444; text-transform: uppercase; letter-spacing: 0.1em; font-family: monospace; margin-bottom: 10px; }
     .card {
       display: flex; align-items: center; gap: 12px;
@@ -74,17 +74,29 @@
     .card-name { font-size: 13px; font-weight: 600; }
     .card-uid  { font-size: 10px; color: #444; font-family: monospace; margin-top: 2px; word-break: break-all; }
     .card-uid.ok { color: #4A8C6F; }
-    .card-del {
-      background: none; border: 1px solid #333; color: #555;
-      width: 26px; height: 26px; border-radius: 6px; font-size: 14px;
+    .card-del  {
+      background: none; border: 1px solid #2a2a2a; color: #555;
+      width: 26px; height: 26px; border-radius: 6px; font-size: 13px;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
       flex-shrink: 0; transition: all 0.2s;
     }
     .card-del:hover { border-color: #c0392b; color: #c0392b; }
 
-    /* ── Botón registro ── */
+    /* Conexión */
+    .conn-row {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 20px; font-size: 12px; color: #555; font-family: monospace;
+    }
+    .conn-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #333; transition: background 0.4s;
+      flex-shrink: 0;
+    }
+    .conn-dot.on { background: #4A8C6F; }
+
+    /* Botón registro */
     .btn-reg {
-      background: transparent; border: 1px solid #333; color: #888;
+      background: transparent; border: 1px solid #2a2a2a; color: #666;
       padding: 10px 20px; border-radius: 8px; font-size: 13px;
       cursor: pointer; font-family: inherit; transition: all 0.2s;
     }
@@ -97,40 +109,46 @@
       padding: 18px; margin-top: 12px; text-align: left;
     }
     .reg-panel.open { display: block; }
-    .reg-panel h3 { font-size: 13px; color: #ccc; margin-bottom: 10px; }
-    .reg-step { font-size: 12px; color: #666; margin-bottom: 8px; }
+    .reg-panel h3   { font-size: 13px; color: #ccc; margin-bottom: 12px; }
+    .reg-step { font-size: 12px; color: #666; margin-bottom: 6px; }
     select {
       width: 100%; background: #1e1e1e; border: 1px solid #333; color: #fff;
-      padding: 8px 10px; border-radius: 6px; font-size: 13px; margin: 4px 0 10px;
+      padding: 8px 10px; border-radius: 6px; font-size: 13px; margin: 4px 0 12px;
     }
-    .reg-result { font-size: 11px; color: #4A8C6F; font-style: italic; margin-top: 4px; min-height: 16px; }
+    .reg-result { font-size: 11px; color: #4A8C6F; font-family: monospace; min-height: 16px; }
   </style>
 </head>
 <body>
 
+<!-- Protobject solo para comunicación, NO para NFC -->
 <script src="https://app.protobject.com/framework/p.js"></script>
 <script src="config.js"></script>
 
-<!-- Pantalla de inicio (NFC requiere gesto del usuario) -->
-<div id="startScreen" onclick="iniciarNFC()">
+<!-- Pantalla de inicio -->
+<div id="startScreen">
   <div class="start-icon">📡</div>
   <div class="start-title">Lector NFC</div>
   <div class="start-sub">Toca para activar el lector<br>NFC del teléfono</div>
-  <div class="start-btn">Toca aquí para iniciar</div>
+  <button class="start-btn" onclick="iniciarNFC()">Toca aquí para iniciar</button>
   <div class="start-note">Requiere Chrome en Android · NFC activado</div>
 </div>
 
-<!-- App -->
+<!-- App principal -->
 <div class="kicker">El humano en cautiverio · Entrega 3</div>
 <div class="subtitle">Lector NFC</div>
 
 <div class="ring scanning" id="ring">
-  <div class="ring-icon" id="rIcon">📡</div>
+  <div class="ring-icon"  id="rIcon">📡</div>
   <div class="ring-label" id="rLabel">ESPERANDO</div>
 </div>
 
-<div class="msg" id="msg">Toca la pantalla para iniciar</div>
+<div class="msg"    id="msg">Toca la pantalla para iniciar</div>
 <div class="submsg" id="submsg"></div>
+
+<div class="conn-row">
+  <div class="conn-dot" id="connDot"></div>
+  <span id="connLabel">Computador: sin conectar</span>
+</div>
 
 <div class="cards">
   <div class="cards-label">Tarjetas registradas</div>
@@ -140,7 +158,7 @@
       <div class="card-name">Chile</div>
       <div class="card-uid" id="uidCL">Sin registrar</div>
     </div>
-    <button class="card-del" onclick="borrarUID('CL')" title="Borrar">✕</button>
+    <button class="card-del" onclick="borrarUID('CL')">✕</button>
   </div>
   <div class="card" id="cardUS">
     <div class="card-flag">🇺🇸</div>
@@ -148,7 +166,7 @@
       <div class="card-name">Estados Unidos</div>
       <div class="card-uid" id="uidUS">Sin registrar</div>
     </div>
-    <button class="card-del" onclick="borrarUID('US')" title="Borrar">✕</button>
+    <button class="card-del" onclick="borrarUID('US')">✕</button>
   </div>
 </div>
 
@@ -156,7 +174,7 @@
 
 <div class="reg-panel" id="regPanel">
   <h3>Registrar tarjeta NFC</h3>
-  <div class="reg-step">1. Elige el país que vas a asociar:</div>
+  <div class="reg-step">1. Elige el país:</div>
   <select id="selPais">
     <option value="CL">🇨🇱 Chile</option>
     <option value="US">🇺🇸 Estados Unidos</option>
@@ -166,58 +184,54 @@
 </div>
 
 <script>
-// ── ESTADO ──────────────────────────────────────────────
-// uids = { CL: 'uid-string', US: 'uid-string' }
-// guardado en localStorage del TELÉFONO
-let uids = {};
+// ── DATOS ──────────────────────────────────────────────────────
+let uids = {};      // { CL: 'serial', US: 'serial' } — en el localStorage DEL TELÉFONO
 let regMode = false;
-let nfcStarted = false;
+let nfcReader = null;
+let connected = false;  // conexión REAL con el computador vía Protobject
 
-// ── PERSISTENCIA ────────────────────────────────────────
+// ── PERSISTENCIA ───────────────────────────────────────────────
 function cargarUIDs() {
   try { uids = JSON.parse(localStorage.getItem('nfc_uids') || '{}'); } catch(e) {}
   actualizarTarjetas();
 }
-
 function guardarUID(pais, uid) {
   uids[pais] = uid;
   try { localStorage.setItem('nfc_uids', JSON.stringify(uids)); } catch(e) {}
   actualizarTarjetas();
 }
-
 function borrarUID(pais) {
   delete uids[pais];
   try { localStorage.setItem('nfc_uids', JSON.stringify(uids)); } catch(e) {}
   actualizarTarjetas();
 }
-
 function actualizarTarjetas() {
-  ['CL', 'US'].forEach(k => {
+  ['CL','US'].forEach(k => {
     const el = document.getElementById('uid' + k);
-    if (uids[k]) {
-      el.textContent = uids[k];
-      el.classList.add('ok');
-    } else {
-      el.textContent = 'Sin registrar';
-      el.classList.remove('ok');
-    }
+    if (uids[k]) { el.textContent = uids[k]; el.classList.add('ok'); }
+    else          { el.textContent = 'Sin registrar'; el.classList.remove('ok'); }
   });
 }
 
-// ── UI ──────────────────────────────────────────────────
+// ── UI ─────────────────────────────────────────────────────────
 function setStatus(icon, label, ringCls, msg, submsg, msgCls) {
   document.getElementById('rIcon').textContent  = icon;
   document.getElementById('rLabel').textContent = label;
   document.getElementById('ring').className     = 'ring ' + (ringCls || '');
   const m = document.getElementById('msg');
-  m.textContent = msg;
-  m.className   = 'msg ' + (msgCls || '');
+  m.textContent = msg; m.className = 'msg ' + (msgCls || '');
   document.getElementById('submsg').textContent = submsg || '';
 }
-
 function marcarTarjeta(pais) {
-  document.getElementById('cardCL').className = 'card' + (pais === 'CL' ? ' active-chile' : '');
-  document.getElementById('cardUS').className = 'card' + (pais === 'US' ? ' active-usa'   : '');
+  document.getElementById('cardCL').className = 'card' + (pais==='CL' ? ' active-chile' : '');
+  document.getElementById('cardUS').className = 'card' + (pais==='US' ? ' active-usa'   : '');
+}
+function setConnected(val) {
+  connected = val;
+  document.getElementById('connDot').classList.toggle('on', val);
+  document.getElementById('connLabel').textContent = val
+    ? 'Computador: conectado ✓'
+    : 'Computador: sin conectar';
 }
 
 function toggleReg() {
@@ -227,85 +241,122 @@ function toggleReg() {
   btn.textContent = regMode ? '✕ Cerrar' : '⚙️ Registrar tarjeta';
   btn.classList.toggle('active', regMode);
   document.getElementById('regResult').textContent = '';
-  if (!regMode) setStatus('📡', 'ACTIVO', 'scanning', 'Acerca una tarjeta NFC', '');
+  if (!regMode) setStatus('📡','ACTIVO','scanning','Acerca una tarjeta NFC','');
 }
 
-// ── NFC ─────────────────────────────────────────────────
-function iniciarNFC() {
-  if (nfcStarted) return;
-  nfcStarted = true;
+// ── WEB NFC API NATIVA ─────────────────────────────────────────
+// Usa la API del navegador directamente, sin depender de Protobject.NFC
+async function iniciarNFC() {
   document.getElementById('startScreen').style.display = 'none';
-  setStatus('📡', 'INICIANDO', 'scanning', 'Activando NFC…', '');
 
-  Protobject.NFC.start()
-    .then(() => {
-      setStatus('📡', 'ACTIVO', 'scanning', 'Acerca una tarjeta NFC', '');
-    })
-    .catch(err => {
-      let detalle = String(err);
-      let msg = 'No se pudo activar el NFC';
-      let sub = 'Revisa permisos del navegador';
-      if (/not supported/i.test(detalle)) sub = 'Este dispositivo no soporta NFC';
-      else if (/permission/i.test(detalle)) sub = 'Permiso denegado — activa NFC en ajustes';
-      setStatus('⚠️', 'ERROR', 'error', msg, sub, 'err');
-      nfcStarted = false;
-      setTimeout(() => {
-        document.getElementById('startScreen').style.display = 'flex';
-      }, 2000);
-    });
-}
-
-Protobject.NFC.onData(uid => {
-  if (uid === 'err: no compatible') {
-    setStatus('❓', 'NO COMPATIBLE', 'error', 'Tarjeta no compatible', 'Usa tarjetas NFC 13.56MHz (MIFARE)', 'err');
-    setTimeout(() => setStatus('📡','ACTIVO','scanning','Acerca una tarjeta NFC',''), 2500);
+  if (!('NDEFReader' in window)) {
+    setStatus('⚠️','SIN SOPORTE','error',
+      'Este dispositivo no soporta NFC',
+      'Necesitas Chrome en Android con NFC activado','err');
     return;
   }
 
-  // ── MODO REGISTRO ──
+  try {
+    nfcReader = new NDEFReader();
+    await nfcReader.scan();
+    setStatus('📡','ACTIVO','scanning','Acerca una tarjeta NFC','');
+
+    nfcReader.addEventListener('reading', ({ serialNumber }) => {
+      // Normalizar el serial (quitar espacios, mayúsculas)
+      const uid = serialNumber.toLowerCase().replace(/\s/g,'');
+      manejarUID(uid);
+    });
+
+    nfcReader.addEventListener('readingerror', () => {
+      setStatus('❓','ERROR LECTURA','error','No se pudo leer la tarjeta','Intenta de nuevo','err');
+      setTimeout(() => setStatus('📡','ACTIVO','scanning','Acerca una tarjeta NFC',''), 2000);
+    });
+
+  } catch(err) {
+    let sub = 'Revisa los permisos del navegador';
+    if (/permission/i.test(String(err))) sub = 'Permiso denegado — activa NFC en Ajustes > Aplicaciones > Chrome';
+    if (/not supported/i.test(String(err))) sub = 'Este navegador no soporta NFC';
+    setStatus('⚠️','ERROR','error','No se pudo activar el NFC', sub, 'err');
+    // Volver a la pantalla de inicio para reintentar
+    setTimeout(() => {
+      document.getElementById('startScreen').style.display = 'flex';
+    }, 3000);
+  }
+}
+
+function manejarUID(uid) {
+  // ── Modo registro ──
   if (regMode) {
     const pais = document.getElementById('selPais').value;
     guardarUID(pais, uid);
     const nombre = pais === 'CL' ? 'Chile 🇨🇱' : 'EE.UU. 🇺🇸';
     document.getElementById('regResult').textContent = '✓ ' + nombre + ' → ' + uid;
-    setStatus('✅', 'GUARDADO', pais === 'CL' ? 'chile' : 'usa',
-      'Tarjeta registrada', nombre, 'ok');
+    setStatus('✅','GUARDADO', pais==='CL' ? 'chile':'usa', 'Tarjeta registrada', nombre, 'ok');
     marcarTarjeta(pais);
     setTimeout(() => {
-      setStatus('📡', 'ACTIVO', 'scanning', 'Acerca una tarjeta NFC', '');
+      setStatus('📡','ACTIVO','scanning','Acerca una tarjeta NFC','');
       marcarTarjeta(null);
     }, 2500);
     return;
   }
 
-  // ── MODO NORMAL: identificar y enviar al computador ──
+  // ── Modo normal: identificar y enviar ──
   if (uids['CL'] && uid === uids['CL']) {
-    setStatus('🇨🇱', 'CHILE', 'chile', '¡Chile detectado!', 'Seleccionando en la visualización…', 'ok');
+    setStatus('🇨🇱','CHILE','chile','¡Chile detectado!','Enviando al computador…','ok');
     marcarTarjeta('CL');
-    Protobject.Core.send('CL').to('index.html');   // ← esto es todo lo que hace falta
+    enviarAlComputador('CL');
     setTimeout(() => { setStatus('📡','ACTIVO','scanning','Acerca una tarjeta NFC',''); marcarTarjeta(null); }, 3000);
 
   } else if (uids['US'] && uid === uids['US']) {
-    setStatus('🇺🇸', 'EE.UU.', 'usa', '¡EE.UU. detectado!', 'Seleccionando en la visualización…', 'ok');
+    setStatus('🇺🇸','EE.UU.','usa','¡EE.UU. detectado!','Enviando al computador…','ok');
     marcarTarjeta('US');
-    Protobject.Core.send('US').to('index.html');   // ← esto es todo lo que hace falta
+    enviarAlComputador('US');
     setTimeout(() => { setStatus('📡','ACTIVO','scanning','Acerca una tarjeta NFC',''); marcarTarjeta(null); }, 3000);
 
   } else {
-    // Tarjeta desconocida: mostrar UID para que el usuario la registre
-    setStatus('❓', 'DESCONOCIDA', 'error',
+    setStatus('❓','DESCONOCIDA','error',
       'Tarjeta no registrada',
-      'Abre ⚙️ Registrar y acerca la tarjeta de nuevo', 'err');
+      'UID: ' + uid + ' — usa ⚙️ Registrar', 'err');
     setTimeout(() => setStatus('📡','ACTIVO','scanning','Acerca una tarjeta NFC',''), 4000);
+  }
+}
+
+// ── PROTOBJECT: solo para comunicación con el computador ───────
+function enviarAlComputador(pais) {
+  try {
+    Protobject.Core.send(pais).to('index.html');
+  } catch(e) {
+    setStatus('⚠️','SIN CONEXIÓN','error',
+      'No hay conexión con el computador',
+      'Abre index.html en el computador primero', 'err');
+    setTimeout(() => setStatus('📡','ACTIVO','scanning','Acerca una tarjeta NFC',''), 3000);
+  }
+}
+
+// Conexión real: solo se marca como conectado cuando el computador
+// responde con un ACK, no por un ping unilateral
+Protobject.Core.onConnected(() => setConnected(true));
+Protobject.Core.onDisconnected(() => setConnected(false));
+
+// El computador envía ACK cuando recibe un mensaje
+Protobject.Core.onReceived(function(msg) {
+  if (msg && msg.action === 'ACK') setConnected(true);
+  if (msg && msg.action === 'LINK_MODE') {
+    // Pedir que acerquen tarjeta para registrarla (desde long-press en index)
+    const pais = msg.nfcKey === 'CL' ? 'Chile 🇨🇱' : 'EE.UU. 🇺🇸';
+    setStatus('🔗','ENLACE','scanning',
+      'Acerca la tarjeta de ' + pais,
+      'El computador está esperando','ok');
+    regMode = true;
+    document.getElementById('selPais').value = msg.nfcKey;
+  }
+  if (msg && msg.action === 'LINK_MODE_OFF') {
+    regMode = false;
+    setStatus('📡','ACTIVO','scanning','Acerca una tarjeta NFC','');
   }
 });
 
-// ── PING para que el computador sepa que el teléfono está conectado ──
-setInterval(() => {
-  try { Protobject.Core.send('PING').to('index.html'); } catch(e) {}
-}, 3000);
-
-// ── INIT ────────────────────────────────────────────────
+// ── INIT ───────────────────────────────────────────────────────
 cargarUIDs();
 </script>
 </body>

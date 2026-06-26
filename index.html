@@ -1380,38 +1380,28 @@ function setPhoneConnected(connected) {
   text.textContent = connected ? 'Teléfono conectado ✓' : 'Esperando conexión…';
 }
 
-// Detectar conexión del teléfono vía Protobject
-// onConnected no se dispara si ya estaba conectado al cargar,
-// así que también revisamos al recibir cualquier mensaje.
+// ─── CONEXIÓN REAL CON EL TELÉFONO ───
+// Solo se marca conectado cuando hay eventos reales de Protobject
 try {
   Protobject.Core.onConnected(() => setPhoneConnected(true));
   Protobject.Core.onDisconnected(() => setPhoneConnected(false));
 } catch(e) {}
 
-// ─── RECIBIR DESDE TELÉFONO (Protobject NFC) ───
+// ─── RECIBIR DESDE TELÉFONO ───
 Protobject.Core.onReceived(function(msg) {
-  // Cualquier mensaje implica que el teléfono está conectado
+  // Conexión real confirmada al recibir cualquier mensaje
   setPhoneConnected(true);
 
+  // Responder con ACK para que el teléfono sepa que estamos conectados
+  try { Protobject.Core.send({ action: 'ACK' }).to('nfc.html'); } catch(e) {}
+
   if (typeof msg === 'string') {
-    if (msg === 'CL') activarPais('Chile');
+    if      (msg === 'CL') activarPais('Chile');
     else if (msg === 'US') activarPais('Estados Unidos');
-    else if (msg === 'PRIM_ON') setModo('prim');
+    else if (msg === 'PRIM_ON')  setModo('prim');
     else if (msg === 'PRIM_OFF') setModo('real');
-    else if (msg === 'PING') { /* solo heartbeat, no hacer nada */ }
-  } else if (typeof msg === 'object') {
-    if (msg.action === 'NFC_LINK_RESULT') {
-      handleNfcLink(msg.uid, msg.nfcKey);
-    } else if (msg.action === 'NFC_READ') {
-      // FIX: el teléfono manda el UID y el nfcKey ya resuelto
-      // buscar en nfcCountryUIDs si ese UID corresponde a algún país
-      const uid = msg.uid;
-      const matchKey = Object.keys(nfcCountryUIDs).find(k => nfcCountryUIDs[k] === uid);
-      if (matchKey) {
-        const nombre = Object.keys(COUNTRIES).find(n => COUNTRIES[n].nfcKey === matchKey);
-        if (nombre) activarPais(nombre);
-      }
-    }
+  } else if (typeof msg === 'object' && msg.action === 'NFC_LINK_RESULT') {
+    handleNfcLink(msg.uid, msg.nfcKey);
   }
 });
 
