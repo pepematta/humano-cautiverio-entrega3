@@ -194,6 +194,8 @@
 // El valor es el nombre del país que se manda al computador
 let uids = {};   // { 'uid-serial': 'Chile' } o { 'uid-serial': 'Estados Unidos' }
 let regMode = false;
+let linkModeKey = null;                                   // enlace iniciado desde el computador
+const NFCKEY_TO_PAIS = { 'CL': 'Chile', 'US': 'Estados Unidos' };
 
 // ── PERSISTENCIA ───────────────────────────────────────────────
 function cargarUIDs() {
@@ -301,6 +303,24 @@ async function iniciarNFC() {
 }
 
 function manejarUID(uid) {
+  // ── Modo enlace iniciado desde el computador (long-press en index.html) ──
+  if (linkModeKey) {
+    const pais = NFCKEY_TO_PAIS[linkModeKey];
+    if (pais) {
+      guardarUID(uid, pais);
+      try { Protobject.Core.send({ t: 'NFC_UID', uid: uid, nfcKey: linkModeKey }).to('index.html'); } catch(e) {}
+      const cls = pais === 'Chile' ? 'chile' : 'usa';
+      setStatus('✅','ENLAZADA', cls, 'Tarjeta enlazada', pais, 'ok');
+      marcarTarjeta(pais);
+      linkModeKey = null;
+      setTimeout(() => {
+        setStatus('📡','ACTIVO','scanning','Acerca una tarjeta NFC','');
+        marcarTarjeta(null);
+      }, 2500);
+      return;
+    }
+  }
+
   // ── Modo registro: guardar UID → país ──
   if (regMode) {
     const pais = document.getElementById('selPais').value;
@@ -349,10 +369,65 @@ function manejarUID(uid) {
   }
 }
 
-// ── CONEXIÓN CON EL COMPUTADOR ─────────────────────────────────
-// La conexión se detecta por eventos reales de Protobject
-Protobject.Core.onConnected(()    => setConnected(true));
-Protobject.Core.onDisconnected(() => setConnected(false));
+// ── CONEXIÓN CON EL COMPUTADOR (handshake a nivel de app) ──────
+// El teléfono envía un "latido" {t:'PING'} cada 2s a index.html. Si el
+// computador responde {t:'PONG'} estamos en la MISMA sesión (mismo ptjuid)
+// y nos marcamos conectados. No depende de APIs no documentadas y empieza
+// SIEMPRE desconectado.
+let lastPong = 0;
+let pcConnected = false;
+let pinging = true;
+
+function markPC(val) {
+  if (val === pcConnected) return;
+  pcConnected = val;
+  setConnected(val);
+}
+
+function sendPing() {
+  if (!pinging) return;
+  try { Protobject.Core.send({ t: 'PING' }).to('index.html'); } catch(e) {}
+}
+
+setInterval(() => {
+  sendPing();
+  if (pcConnected && Date.now() - lastPong > 6000) markPC(false);
+}, 2000);
+sendPing(); // primer intento inmediato
+
+Protobject.Core.onReceived(function(msg) {
+  if (!msg || typeof msg !== 'object') return;
+
+  if (msg.t === 'PONG') { lastPong = Date.now(); markPC(true); return; }
+
+  if (msg.t === 'BYE') {
+    // El computador pidió desconectar: dejamos de latir y esperamos re-escaneo.
+    markPC(false);
+    pinging = false;
+    setStatus('🔌','DESCONECTADO','error',
+      'Desconectado del computador',
+      'Vuelve a escanear el QR para reconectar', 'err');
+    return;
+  }
+
+  if (msg.action === 'LINK_MODE' && msg.nfcKey) {
+    linkModeKey = msg.nfcKey;
+    const pais = NFCKEY_TO_PAIS[msg.nfcKey] || msg.nfcKey;
+    setStatus('🔗','ENLAZAR','scanning', 'Modo enlace: ' + pais, 'Acerca la tarjeta a enlazar', '');
+    return;
+  }
+
+  if (msg.action === 'LINK_MODE_OFF') {
+    linkModeKey = null;
+    setStatus('📡','ACTIVO','scanning','Acerca una tarjeta NFC','');
+    return;
+  }
+});
+
+// Compatibilidad: usar el evento nativo solo como señal extra para apagar.
+try {
+  if (Protobject.Core.onDisconnected) Protobject.Core.onDisconnected(() => markPC(false));
+} catch(e) {}
 
 // ── INIT ───────────────────────────────────────────────────────
 cargarUIDs();

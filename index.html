@@ -661,7 +661,7 @@
       </div>
       <button id="disconnectPhoneBtn"
         style="display:none;margin-top:14px;font-size:12px;padding:7px 16px;background:transparent;border:1px solid #c0392b;color:#c0392b;border-radius:6px;cursor:pointer;"
-        onclick="setPhoneConnected(false)">
+        onclick="disconnectPhone()">
         Desconectar teléfono
       </button>
     </div>
@@ -1348,6 +1348,9 @@ let phoneConnected = false;
 
 function openQrModal() {
   document.getElementById('qrModalBackdrop').classList.add('visible');
+  // Abrir el modal expresa intención de (re)conectar: levantar el bloqueo
+  // de reconexión que pone "Desconectar".
+  manualDisconnect = false;
   // Siempre regenerar el QR al abrir — el ptjuid puede haber cambiado
   qrGenerated = false;
   document.getElementById('qrCanvas').innerHTML = '';
@@ -1358,38 +1361,63 @@ function closeQrModal() {
   document.getElementById('qrModalBackdrop').classList.remove('visible');
 }
 
-function generateQR() {
-  // Protobject.QR genera automáticamente el link con el ptjuid correcto
-  // Ese link apunta a nfc.html de la sesión activa
+// Obtiene el ptjuid de la sesión Protobject activa.
+// En producción (setProduction(true)) el framework reescribe la URL de esta
+// página con ?ptjuid=XXXX al iniciar, así que la fuente principal y fiable es
+// la query string de la propia página. Se añaden respaldos por si una versión
+// del framework guardara el id internamente.
+function getSessionUID() {
   try {
-    const qr = new Protobject.QR({
-      target: 'nfc.html',
-      container: 'qrCanvas',
-      width: 200,
-      height: 200,
+    const q = new URLSearchParams(window.location.search).get('ptjuid');
+    if (q) return q;
+    const h = new URLSearchParams((window.location.hash || '').replace(/^#/, '')).get('ptjuid');
+    if (h) return h;
+  } catch(e) {}
+  try {
+    const P = window.Protobject || {};
+    const cands = [P.ptjuid, P.uid, P.UID, P.sessionId,
+      P.Core && P.Core.ptjuid, P.Core && P.Core.uid, P.Core && P.Core.sessionId];
+    for (const c of cands) if (typeof c === 'string' && c) return c;
+  } catch(e) {}
+  return '';
+}
+
+// Construye la URL de nfc.html dentro de la MISMA sesión (mismo ptjuid),
+// resolviéndola relativa a la ubicación actual. Funciona tanto si la página
+// es .../repo/ como .../repo/index.html (GitHub Pages).
+function buildNfcURL() {
+  const uid = getSessionUID();
+  const url = new URL('nfc.html', window.location.href);
+  url.search = ''; // descartar la query de index.html
+  if (uid) url.searchParams.set('ptjuid', uid);
+  return url.href;
+}
+
+function generateQR() {
+  // Importante: el componente nativo Protobject.QR es un LECTOR de cámara,
+  // no un generador. Aquí dibujamos el QR nosotros con qrcodejs apuntando a
+  // nfc.html con el ptjuid de la sesión, para que el teléfono entre a la misma.
+  const canvas = document.getElementById('qrCanvas');
+  canvas.innerHTML = '';
+  const url = buildNfcURL();
+  document.getElementById('qrUrl').textContent = url;
+
+  if (typeof QRCode !== 'undefined') {
+    new QRCode(canvas, {
+      text: url, width: 200, height: 200,
+      colorDark: '#1a1a1a', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
     });
-    // Mostrar la URL generada
-    const url = qr.getURL ? qr.getURL() : '';
-    if (url) document.getElementById('qrUrl').textContent = url;
-  } catch(e) {
-    // Fallback: construir la URL manualmente con el ptjuid actual
-    const params = new URLSearchParams(window.location.search);
-    const uid = params.get('ptjuid') || '';
-    const base = window.location.href.replace(/\/[^/?]*.*$/, '');
-    const url = base + '/nfc.html' + (uid ? '?ptjuid=' + uid : '');
-    document.getElementById('qrUrl').textContent = url;
-    // Generar QR con la librería qrcodejs si está disponible
-    const canvas = document.getElementById('qrCanvas');
-    canvas.innerHTML = '';
-    if (typeof QRCode !== 'undefined') {
-      new QRCode(canvas, {
-        text: url, width: 200, height: 200,
-        colorDark: '#1a1a1a', colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel.M
-      });
-    } else {
-      canvas.innerHTML = '<p style="font-size:12px;color:#888;padding:20px;">URL: ' + url + '</p>';
-    }
+  } else {
+    canvas.innerHTML = '<p style="font-size:12px;color:#888;padding:20px;word-break:break-all;">' + url + '</p>';
+  }
+
+  // Sin ptjuid el teléfono abriría OTRA sesión y nunca conectaría: avisar.
+  const txt = document.getElementById('qrStatusText');
+  if (!/[?&]ptjuid=/.test(url)) {
+    txt.textContent = '⚠ Sin ptjuid: recarga la página';
+  } else if (!phoneConnected) {
+    txt.textContent = 'Esperando conexión…';
   }
   qrGenerated = true;
 }
@@ -1407,25 +1435,66 @@ function setPhoneConnected(connected) {
   if (dcBtn) dcBtn.style.display = connected ? '' : 'none';
 }
 
-// ─── CONEXIÓN REAL CON EL TELÉFONO ───
-// Empieza siempre desconectada. Solo se marca conectado con eventos reales.
-try {
-  Protobject.Core.onConnected(() => setPhoneConnected(true));
-  Protobject.Core.onDisconnected(() => setPhoneConnected(false));
-} catch(e) {}
+// ─── CONEXIÓN REAL CON EL TELÉFONO (handshake a nivel de app) ───
+// Empieza SIEMPRE desconectada. Solo se marca verde cuando el teléfono
+// responde dentro de la MISMA sesión Protobject (mismo ptjuid): el teléfono
+// envía un latido {t:'PING'}, nosotros contestamos {t:'PONG'}. Esto no depende
+// de APIs internas no documentadas del framework.
+let lastPhonePing = 0;
+let manualDisconnect = false;
 
-// ─── RECIBIR DESDE TELÉFONO ───
+function notePhoneAlive() {
+  lastPhonePing = Date.now();
+  if (manualDisconnect) return;            // ignorar latidos residuales tras desconectar
+  if (!phoneConnected) setPhoneConnected(true);
+}
+
+function disconnectPhone() {
+  manualDisconnect = true;
+  setPhoneConnected(false);
+  try { Protobject.Core.send({ t: 'BYE' }).to('nfc.html'); } catch(e) {}
+  // Permitir reconectar al volver a escanear el QR (o reabrir el modal).
+  setTimeout(() => { manualDisconnect = false; }, 2500);
+}
+
+// Vigila la presencia del teléfono: si deja de llegar el latido, vuelve a gris.
+setInterval(() => {
+  if (phoneConnected && Date.now() - lastPhonePing > 6000) setPhoneConnected(false);
+}, 2000);
+
+// ─── RECIBIR DESDE EL TELÉFONO ───
 Protobject.Core.onReceived(function(msg) {
-  setPhoneConnected(true);
+  // Mensajes de control (objetos)
+  if (msg && typeof msg === 'object') {
+    if (msg.t === 'PING') {
+      notePhoneAlive();
+      try { Protobject.Core.send({ t: 'PONG' }).to('nfc.html'); } catch(e) {}
+      return;
+    }
+    if (msg.t === 'BYE') { setPhoneConnected(false); return; }
+    if (msg.t === 'NFC_UID' && msg.uid && msg.nfcKey) {   // enlace iniciado desde el PC
+      notePhoneAlive();
+      handleNfcLink(msg.uid, msg.nfcKey);
+      return;
+    }
+    return;
+  }
 
   // El teléfono manda el nombre del país directamente como string
   if (typeof msg === 'string') {
+    notePhoneAlive();
     const pais = Object.keys(COUNTRIES).find(
       n => n.toLowerCase() === msg.toLowerCase() || COUNTRIES[n].nfcKey === msg.toUpperCase()
     );
     if (pais) activarPais(pais);
   }
 });
+
+// Compatibilidad: si esta versión del framework expone eventos de conexión,
+// los usamos solo como señal extra para apagar (nunca como única fuente de verdad).
+try {
+  if (Protobject.Core.onDisconnected) Protobject.Core.onDisconnected(() => setPhoneConnected(false));
+} catch(e) {}
 
 // ─── INIT ───
 loadCalib();
