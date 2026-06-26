@@ -9,6 +9,6 @@ Protobject.initialize([
   {
     name: "LectorNFC",
     page: "nfc.html",
-    debug: "local",
+    debug: "remote",
   }
 ]);
